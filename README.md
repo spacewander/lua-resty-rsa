@@ -55,6 +55,7 @@ Synopsis
     G2IpDgWic0Uuf+dDM6kCQF2/UbL6MZKDC4rVeFF3vJh7EScfmfssQ/eVEz637N06
     2pzSvvB4xq6Gt9VwoGVNsn5r/K6AbT+rmewW57Jo7pg=
     -----END RSA PRIVATE KEY-----
+    ]]
 
     local resty_rsa = require "resty.rsa"
     local pub, err = resty_rsa:new(RSA_PUBLIC_KEY, true)
