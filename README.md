@@ -58,26 +58,104 @@ Synopsis
     ]]
 
     local resty_rsa = require "resty.rsa"
-    local pub, err = resty_rsa:new(RSA_PUBLIC_KEY, true)
+    local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY })
     if not pub then
-    ngx.say("new rsa err: ", err)
-    return
+        ngx.say("new rsa err: ", err)
+        return
     end
     local encrypted, err = pub:encrypt("hello")
     if not encrypted then
-    ngx.say("failed to encrypt: ", err)
-    return
+        ngx.say("failed to encrypt: ", err)
+        return
     end
     ngx.say("encrypted length: ", #encrypted)
 
-    local priv, err = resty_rsa:new(RSA_PRIV_KEY)
+    local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY })
     if not priv then
-    ngx.say("new rsa err: ", err)
-    return
+        ngx.say("new rsa err: ", err)
+        return
     end
     local decrypted = priv:decrypt(encrypted)
     ngx.say(decrypted == "hello")
+
+    local algorithm = "SHA"
+    local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY, algorithm = algorithm })
+    if not priv then
+        ngx.say("new rsa err: ", err)
+        return
+    end
+
+    local str = "hello"
+    local sig, err = priv:sign(str)
+    if not sig then
+        ngx.say("failed to sign:", err)
+        return
+    end
+    ngx.say("sig length: ", #sig)
+
+    local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY, algorithm = algorithm })
+    if not pub then
+        ngx.say("new rsa err: ", err)
+        return
+    end
+    local verify, err = pub:verify(str, sig)
+    if not verify then
+        ngx.say("verify err: ", err)
+        return
+    end
+    ngx.say(verify)
 ```
+
+
+Methods
+=======
+
+To load this library,
+
+1. you need to specify this library's path in ngx_lua's [lua_package_path](https://github.com/chaoslawful/lua-nginx-module#lua_package_path) directive. For example, `lua_package_path "/path/to/lua-resty-rsa/lib/?.lua;;";`.
+2. you use `require` to load the library into a local Lua variable:
+
+```lua
+    local rsa = require "resty.rsa"
+```
+
+new
+---
+`syntax: obj, err = rsa:new(opts)`
+
+    Creates a new rsa object instance by specifying an options table `opts`.
+
+The options table accepts the following options:
+
+* `public_key`
+Specifies the public rsa key.
+* `private_key`
+Specifies the private rsa key.
+* `password`
+Specifies the password to read rsa key.
+* `padding`
+Specifies the padding mode when you want to encrypt/decrypt.
+* `algorithm`
+Specifies the digest algorithm when you want to sign/verify.
+
+
+encrypt
+----
+`syntax: encrypted, err = obj:encrypt(str)`
+
+decrypt
+------
+`syntax: decrypted, err = obj:decrypt(encrypted)`
+
+
+sign
+----
+`syntax: signature, err = obj:sign(str)`
+
+decrypt
+------
+`syntax: ok, err = obj:verify(str, signature)`
+
 
 Author
 ======
