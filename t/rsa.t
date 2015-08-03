@@ -522,3 +522,63 @@ GET /t
 true
 --- no_error_log
 [error]
+
+
+
+=== TEST 10: RSA sign: need init for every call
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY, algorithm = "RSA-SHA1" })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+
+            local str = "hello"
+            local sig, err = priv:sign(str)
+            if not sig then
+                ngx.say("failed to sign:", err)
+                return
+            end
+
+            local sig, err = priv:sign(str)
+            if not sig then
+                ngx.say("failed to sign:", err)
+                return
+            end
+            ngx.say("sig length: ", #sig)
+
+            local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY, algorithm = "RSA-SHA1" })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local verify, err = pub:verify(str, sig)
+            if not verify then
+                ngx.say("verify err: ", err)
+                return
+            end
+            ngx.say(verify)
+
+            local verify, err = pub:verify(str, sig)
+            if not verify then
+                ngx.say("verify err: ", err)
+                return
+            end
+            ngx.say(verify)
+
+            collectgarbage()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+sig length: 128
+true
+true
+--- no_error_log
+[error]

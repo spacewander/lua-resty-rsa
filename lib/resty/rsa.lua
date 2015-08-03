@@ -34,7 +34,6 @@ int	BIO_puts(BIO *bp,const char *buf);
 void BIO_vfree(BIO *a);
 
 typedef struct rsa_st RSA;
-int RSA_size(const RSA *rsa);
 void RSA_free(RSA *rsa);
 typedef int pem_password_cb(char *buf, int size, int rwflag, void *userdata);
 RSA * PEM_read_bio_RSAPrivateKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
@@ -106,7 +105,7 @@ end
 
 
 function _M.new(self, opts)
-    local key, read_func, is_pub, md_ctx
+    local key, read_func, is_pub, md_ctx, md
 
     if opts.public_key then
         key = opts.public_key
@@ -161,15 +160,12 @@ function _M.new(self, opts)
     if opts.algorithm then
         C.OpenSSL_add_all_digests()
 
-        local md = C.EVP_get_digestbyname(opts.algorithm)
+        md = C.EVP_get_digestbyname(opts.algorithm)
         if ffi_cast("void *", md) == nil then
             return nil, "Unknown message digest"
         end
 
         md_ctx = C.EVP_MD_CTX_create()
-        if C.EVP_DigestInit(md_ctx, md) <= 0 then
-            return err()
-        end
     end
 
     -- ctx init for encrypt or decrypt
@@ -196,6 +192,7 @@ function _M.new(self, opts)
             _decrypt_ctx = not is_pub and ctx or nil,
             _sign_ctx = not is_pub and md_ctx or nil,
             _verify_ctx = is_pub and md_ctx or nil,
+            md = md,
         }, mt)
 end
 
@@ -246,6 +243,10 @@ function _M.sign(self, str)
         return nil, "not inited for sign"
     end
 
+    if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
+        return err()
+    end
+
     if C.EVP_DigestUpdate(md_ctx, str, #str) <= 0 then
         return err()
     end
@@ -264,6 +265,10 @@ function _M.verify(self, str, sig)
     local md_ctx = self._verify_ctx
     if not md_ctx then
         return nil, "not inited for verify"
+    end
+
+    if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
+        return err()
     end
 
     if C.EVP_DigestUpdate(md_ctx, str, #str) <= 0 then
