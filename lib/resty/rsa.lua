@@ -11,7 +11,7 @@ local C = ffi.C
 local setmetatable = setmetatable
 
 
-local _M = { _VERSION = '0.09' }
+local _M = { _VERSION = '0.01' }
 
 local mt = { __index = _M }
 
