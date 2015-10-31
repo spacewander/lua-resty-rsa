@@ -152,7 +152,7 @@ sign
 ----
 `syntax: signature, err = obj:sign(str)`
 
-decrypt
+verify
 ------
 `syntax: ok, err = obj:verify(str, signature)`
 
