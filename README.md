@@ -104,6 +104,20 @@ Synopsis
         return
     end
     ngx.say(verify)
+    
+	RSA_PUBLIC_KEY = [[
+	-----BEGIN PUBLIC KEY-----
+	MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC8rPqGGsar+BWI7vAtaaDOqphy41j5186hCU9D
+	cchV4HWiv0HvQ3KXAEqHfZiAHZSyMSRMmDZVnqJwCVWFvKUPqU1RsCPZ9Imk+9ZXVkM3DDdw74v/
+	s6YMNx8cTuxybRCJUfOKbyC79cnHgmQqqkODv+EnprBtNKE4k8g90jNmbwIDAQAB
+	-----END PUBLIC KEY-----
+	    ]];
+	local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY,algorithm = algorithm,key_type="DER"})
+	if not pub then
+	    ngx.say("new rsa err: ", err)
+	    return
+	end
+    
 ```
 
 
@@ -138,7 +152,7 @@ Specifies the padding mode when you want to encrypt/decrypt.
 * `algorithm`
 Specifies the digest algorithm when you want to sign/verify.
 * `key_type`
-Loading certificates Type  Default pem, Optional der.
+Loading certificates Type  Default:pem Optional:DER.
 
 
 encrypt

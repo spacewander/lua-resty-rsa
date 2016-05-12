@@ -100,6 +100,31 @@ RCxMyDrtIHNmD2uVFQefpY+6OiTaOsWYiK9FtPQwswue1NjPtXrClKt+gzJkCAd6
 ]]
 ';
 
+local DER_PUBLICK_KEY = [[
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC8rPqGGsar+BWI7vAtaaDOqphy41j5186hCU9D
+cchV4HWiv0HvQ3KXAEqHfZiAHZSyMSRMmDZVnqJwCVWFvKUPqU1RsCPZ9Imk+9ZXVkM3DDdw74v/
+s6YMNx8cTuxybRCJUfOKbyC79cnHgmQqqkODv+EnprBtNKE4k8g90jNmbwIDAQAB
+-----END PUBLIC KEY-----
+	    ]];
+local DER_PRIVATE_KEY = [[
+-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQDnzKjFc9l5RyvusBClvRRJ0ToWxVZQtoAH6FsxZAlfj29cT/v8
+pCpoqKE38NO0xYfSz7r0VtnJf26Ri/Z9CRt8/7jqU/7HQzMjmf5MScnq8v0qTNgC
+ZRTeaj0JGs1PEwCe8teDr0nBVEU3OBQ3NU/Nqcl4I6V5B5cg9/Rtx0dRnwIDAQAB
+AoGAV68UfLTJJFZm6QCTG4792LqbxbdaYmfW4KblsDZOUWa50mqzQKt9G2AGtFmW
+TACY04cfCoS8F7vrwIT4de33BkaKhM4Tdf5duxeMqtfNDJT3x9H6oS9l1HYIBkyc
+5Xtmh2n9XkbMt7jFfy66u00wC0q4zXqx2JwQFd73Zh8LmwECQQD2ZCYkqNW/wGZJ
+S5GAeUyDxj4HPQ5h1mCd5AARbRpGgFI+lOwMDtM60s6P0lenmBarrjXYQJ1ka/yR
+tDuGv+mBAkEA8NbVTMCvmjCLA0YaWgod+Ygu2SSp0/r4EDpiIswVnDm4mT0GEM2M
+WGd+jpuL+R5CuHb5r1l3AhynsBTLOMGLHwJAFKuOL6EiXXXMnvWB/V8vthZZec37
+eOW9MUHBZ7TZcXSucaWYr+JGgjbRMWuaAutVa42v4rZ4/cW5aJfQLpvHAQJBANbC
+O6IdkHkmIE/jC0yPCPuifGQVVXs5qEqQRUJSSlLtBbdfuzDwmd2bLDdubPrQCR8E
+uNGsLXssojtZz33k2HECQQDD05B+b7hjsSoKjSdqSPvXJJ6CdIDaxETi6WPbeA13
+cdYXJay0t2+oxtGljWqXhyLijOjKrtmFB2smfpaG/942
+-----END RSA PRIVATE KEY-----
+]];
+
 #log_level 'warn';
 
 run_tests();
@@ -553,6 +578,64 @@ true
             ngx.say("sig length: ", #sig)
 
             local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY, algorithm = "RSA-SHA1" })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local verify, err = pub:verify(str, sig)
+            if not verify then
+                ngx.say("verify err: ", err)
+                return
+            end
+            ngx.say(verify)
+
+            local verify, err = pub:verify(str, sig)
+            if not verify then
+                ngx.say("verify err: ", err)
+                return
+            end
+            ngx.say(verify)
+
+            collectgarbage()
+        ';
+    }
+--- request
+GET /t
+--- response_body
+sig length: 128
+true
+true
+--- no_error_log
+[error]
+
+=== TEST 11: DER RSA sign: need init for every call
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua '
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local priv, err = resty_rsa:new({ private_key = DER_PRIVATE_KEY, algorithm = "RSA-SHA1" })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+
+            local str = "hello"
+            local sig, err = priv:sign(str)
+            if not sig then
+                ngx.say("failed to sign:", err)
+                return
+            end
+
+            local sig, err = priv:sign(str)
+            if not sig then
+                ngx.say("failed to sign:", err)
+                return
+            end
+            ngx.say("sig length: ", #sig)
+
+            local pub, err = resty_rsa:new({ public_key = DER_PUBLICK_KEY, algorithm = "RSA-SHA1",key_type="DER" })
             if not pub then
                 ngx.say("new rsa err: ", err)
                 return
