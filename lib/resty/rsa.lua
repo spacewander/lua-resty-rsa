@@ -30,17 +30,18 @@ typedef struct bio_st BIO;
 typedef struct bio_method_st BIO_METHOD;
 BIO_METHOD *BIO_s_mem(void);
 BIO * BIO_new(BIO_METHOD *type);
-int	BIO_puts(BIO *bp,const char *buf);
+int BIO_puts(BIO *bp,const char *buf);
 void BIO_vfree(BIO *a);
 
 typedef struct rsa_st RSA;
 void RSA_free(RSA *rsa);
 typedef int pem_password_cb(char *buf, int size, int rwflag, void *userdata);
 RSA * PEM_read_bio_RSAPrivateKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
-								void *u);
+                void *u);
 RSA * PEM_read_bio_RSAPublicKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
                                 void *u);
-
+RSA * PEM_read_bio_RSA_PUBKEY(BIO *bp, RSA **rsa, pem_password_cb *cb,
+                                void *u);
 unsigned long ERR_get_error(void);
 const char * ERR_reason_error_string(unsigned long e);
 
@@ -109,7 +110,11 @@ function _M.new(self, opts)
 
     if opts.public_key then
         key = opts.public_key
-        read_func = C.PEM_read_bio_RSAPublicKey
+        if("DER" == opts.key_type) then
+          read_func = C.PEM_read_bio_RSA_PUBKEY
+        else
+         read_func = C.PEM_read_bio_RSAPublicKey
+        end
         is_pub = true
 
     elseif opts.private_key then
@@ -148,6 +153,7 @@ function _M.new(self, opts)
     if C.EVP_PKEY_set1_RSA(pkey, rsa) == 0 then
         return err()
     end
+   
 
     --EVP_PKEY_CTX
     local ctx = C.EVP_PKEY_CTX_new(pkey, nil)
