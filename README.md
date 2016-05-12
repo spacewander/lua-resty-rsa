@@ -137,6 +137,8 @@ Specifies the password to read rsa key.
 Specifies the padding mode when you want to encrypt/decrypt.
 * `algorithm`
 Specifies the digest algorithm when you want to sign/verify.
+* `key_type`
+Loading certificates Type  Default pem, Optional der.
 
 
 encrypt
