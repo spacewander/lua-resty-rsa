@@ -1,7 +1,7 @@
 Name
 =============
 
-lua-resty-string - RSA functions for LuaJIT
+lua-resty-rsa - RSA functions for LuaJIT
 
 Status
 ======
@@ -22,7 +22,7 @@ Synopsis
 ```lua
     # nginx.conf:
 
-    lua_package_path "/path/to/lua-resty-string/lib/?.lua;;";
+    lua_package_path "/path/to/lua-resty-rsa/lib/?.lua;;";
 
     server {
         location = /test {
