@@ -34,6 +34,7 @@ int	BIO_puts(BIO *bp,const char *buf);
 void BIO_vfree(BIO *a);
 
 typedef struct rsa_st RSA;
+RSA *RSA_new(void);
 void RSA_free(RSA *rsa);
 typedef int pem_password_cb(char *buf, int size, int rwflag, void *userdata);
 RSA * PEM_read_bio_RSAPrivateKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
@@ -43,6 +44,23 @@ RSA * PEM_read_bio_RSAPublicKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
 
 unsigned long ERR_get_error(void);
 const char * ERR_reason_error_string(unsigned long e);
+
+typedef struct bignum_st BIGNUM;
+BIGNUM *BN_new(void);
+void BN_free(BIGNUM *a);
+typedef unsigned long BN_ULONG;
+int BN_set_word(BIGNUM *a, BN_ULONG w);
+typedef struct bn_gencb_st BN_GENCB;
+int RSA_generate_key_ex(RSA *rsa, int bits, BIGNUM *e, BN_GENCB *cb);
+
+typedef struct evp_cipher_st EVP_CIPHER;
+int PEM_write_bio_RSAPrivateKey(BIO *bp, RSA *x, const EVP_CIPHER *enc,
+                                unsigned char *kstr, int klen,
+                                pem_password_cb *cb, void *u);
+int PEM_write_bio_RSAPublicKey(BIO *bp, RSA *x);
+
+long BIO_ctrl(BIO *bp, int cmd, long larg, void *parg);
+int BIO_read(BIO *b, void *data, int len);
 
 typedef struct evp_pkey_st EVP_PKEY;
 typedef struct engine_st ENGINE;
@@ -103,6 +121,55 @@ local function err()
     return nil, ffi_str(err)
 end
 
+local function read_bio(bio)
+    local BIO_CTRL_PENDING = 10
+    local keylen = C.BIO_ctrl(bio, BIO_CTRL_PENDING, 0, nil);
+    local key = ffi.new("char[?]", keylen)
+    if C.BIO_read(bio, key, keylen) < 0 then
+        return err()
+    end
+    return ffi_str(key)
+end
+
+-- Follow the calling style to avoid careless mistake.
+function _M.generate_rsa_keys(_, bits)
+    local rsa = C.RSA_new()
+    ffi_gc(rsa, C.RSA_free)
+    local bn = C.BN_new()
+    ffi_gc(bn, C.BN_free)
+
+    -- Set public exponent to 65537
+    if C.BN_set_word(bn, 65537) ~= 1 then
+        return err()
+    end
+
+    -- Generate key
+    if C.RSA_generate_key_ex(rsa, bits, bn, nil) ~= 1 then
+        return err()
+    end
+
+    local pub_key_bio = C.BIO_new(C.BIO_s_mem())
+    ffi_gc(pub_key_bio, C.BIO_vfree)
+    if C.PEM_write_bio_RSAPublicKey(pub_key_bio, rsa) ~= 1 then
+        return err()
+    end
+    local public_key, err = read_bio(pub_key_bio)
+    if not public_key then
+        return nil, nil, err
+    end
+
+    local priv_key_bio = C.BIO_new(C.BIO_s_mem())
+    ffi_gc(priv_key_bio, C.BIO_vfree)
+    if C.PEM_write_bio_RSAPrivateKey(priv_key_bio, rsa, nil, nil, 0, nil, nil) ~= 1 then
+        return err()
+    end
+    local private_key, err = read_bio(priv_key_bio)
+    if not private_key then
+        return nil, nil, err
+    end
+
+    return public_key, private_key
+end
 
 function _M.new(self, opts)
     local key, read_func, is_pub, md_ctx, md
