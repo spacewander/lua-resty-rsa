@@ -584,11 +584,12 @@ true
 [error]
 
 
+
 === TEST 11: generate RSA public key and private key
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local rsa_public_key, rsa_private_key, err = resty_rsa:generate_rsa_keys(2048)
@@ -614,7 +615,7 @@ true
             ngx.say(decrypted == "hello")
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
