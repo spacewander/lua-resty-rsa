@@ -582,3 +582,45 @@ true
 true
 --- no_error_log
 [error]
+
+
+
+=== TEST 11: generate RSA public key and private key
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local rsa_public_key, rsa_private_key, err = resty_rsa:generate_rsa_keys(2048)
+
+            local pub, err = resty_rsa:new({ public_key = rsa_public_key })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local encrypted, err = pub:encrypt("hello")
+            if not encrypted then
+                ngx.say("failed to encrypt: ", err)
+                return
+            end
+            ngx.say("encrypted length: ", #encrypted)
+
+            local priv, err = resty_rsa:new({ private_key = rsa_private_key })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local decrypted = priv:decrypt(encrypted)
+            ngx.say(decrypted == "hello")
+
+            collectgarbage()
+        }
+    }
+--- request
+GET /t
+--- response_body
+encrypted length: 256
+true
+--- no_error_log
+[error]
