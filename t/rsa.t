@@ -111,7 +111,7 @@ __DATA__
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY })
@@ -135,7 +135,7 @@ __DATA__
             ngx.say(decrypted == "hello")
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
@@ -150,7 +150,7 @@ true
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local pub, err = resty_rsa:new({ public_key = RSA_BAD_KEY })
@@ -166,7 +166,7 @@ true
             ngx.say("encrypted length: ", #encrypted)
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
@@ -180,7 +180,7 @@ new rsa err: bad base64 decode
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY, padding = resty_rsa.PADDING.RSA_PKCS1_PADDING })
@@ -204,7 +204,7 @@ new rsa err: bad base64 decode
             ngx.say(decrypted == "hello")
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
@@ -219,7 +219,7 @@ false
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             for name, padding in pairs(resty_rsa.PADDING) do
@@ -242,7 +242,7 @@ false
             end
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
@@ -259,7 +259,7 @@ RSA_PKCS1_OAEP_PADDING:86
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local pub, err = resty_rsa:new( { public_key = RSA_PUBLIC_KEY, padding = resty_rsa.PADDING.RSA_NO_PADDING })
@@ -286,7 +286,7 @@ RSA_PKCS1_OAEP_PADDING:86
             ngx.say(decrypted == s)
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
@@ -301,7 +301,7 @@ true
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local pub, err = resty_rsa:new({ public_key = RSA_PASS_PUBLIC_KEY })
@@ -325,7 +325,7 @@ true
             ngx.say(decrypted == "hello")
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
@@ -341,7 +341,7 @@ true
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_SHORT_PK_CONF
             local resty_rsa = require "resty.rsa"
             local algorithm = "SHA"
@@ -372,7 +372,7 @@ true
             ngx.say(verify)
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
@@ -388,7 +388,7 @@ true
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY, algorithm = "RSA-MD5" })
@@ -418,7 +418,7 @@ true
             ngx.say(verify)
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
@@ -434,7 +434,7 @@ verify err: algorithm mismatch
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_SHORT_PK_CONF
             local resty_rsa = require "resty.rsa"
 
@@ -514,7 +514,7 @@ verify err: algorithm mismatch
             end
 
             ngx.say(count == #algorithms)
-        ';
+        }
     }
 --- request
 GET /t
@@ -529,7 +529,7 @@ true
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
-        content_by_lua '
+        content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY, algorithm = "RSA-SHA1" })
@@ -572,7 +572,7 @@ true
             ngx.say(verify)
 
             collectgarbage()
-        ';
+        }
     }
 --- request
 GET /t
