@@ -32,33 +32,56 @@ Synopsis
 
     -- conf/test.lua:
 
-    local RSA_PUBLIC_KEY = [[
-    -----BEGIN RSA PUBLIC KEY-----
-    MIGJAoGBAJ9YqFCTlhnmTYNCezMfy7yb7xwAzRinXup1Zl51517rhJq8W0wVwNt+
-    mcKwRzisA1SIqPGlhiyDb2RJKc1cCNrVNfj7xxOKCIihkIsTIKXzDfeAqrm0bU80
-    BSjgjj6YUKZinUAACPoao8v+QFoRlXlsAy72mY7ipVnJqBd1AOPVAgMBAAE=
-    -----END RSA PUBLIC KEY-----
-    ]]
-    local RSA_PRIV_KEY = [[
-    -----BEGIN RSA PRIVATE KEY-----
-    MIICXAIBAAKBgQCfWKhQk5YZ5k2DQnszH8u8m+8cAM0Yp17qdWZedede64SavFtM
-    FcDbfpnCsEc4rANUiKjxpYYsg29kSSnNXAja1TX4+8cTigiIoZCLEyCl8w33gKq5
-    tG1PNAUo4I4+mFCmYp1AAAj6GqPL/kBaEZV5bAMu9pmO4qVZyagXdQDj1QIDAQAB
-    AoGBAJega3lRFvHKPlP6vPTm+p2c3CiPcppVGXKNCD42f1XJUsNTHKUHxh6XF4U0
-    7HC27exQpkJbOZO99g89t3NccmcZPOCCz4aN0LcKv9oVZQz3Avz6aYreSESwLPqy
-    AgmJEvuVe/cdwkhjAvIcbwc4rnI3OBRHXmy2h3SmO0Gkx3D5AkEAyvTrrBxDCQeW
-    S4oI2pnalHyLi1apDI/Wn76oNKW/dQ36SPcqMLTzGmdfxViUhh19ySV5id8AddbE
-    /b72yQLCuwJBAMj97VFPInOwm2SaWm3tw60fbJOXxuWLC6ltEfqAMFcv94ZT/Vpg
-    nv93jkF9DLQC/CWHbjZbvtYTlzpevxYL8q8CQHiAKHkcopR2475f61fXJ1coBzYo
-    suAZesWHzpjLnDwkm2i9D1ix5vDTVaJ3MF/cnLVTwbChLcXJSVabDi1UrUcCQAmn
-    iNq6/mCoPw6aC3X0Uc3jEIgWZktoXmsI/jAWMDw/5ZfiOO06bui+iWrD4vRSoGH9
-    G2IpDgWic0Uuf+dDM6kCQF2/UbL6MZKDC4rVeFF3vJh7EScfmfssQ/eVEz637N06
-    2pzSvvB4xq6Gt9VwoGVNsn5r/K6AbT+rmewW57Jo7pg=
-    -----END RSA PRIVATE KEY-----
-    ]]
-
     local resty_rsa = require "resty.rsa"
-    local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY })
+    local rsa_public_key, rsa_priv_key, err = resty_rsa:generate_rsa_keys(2048)
+    if not rsa_public_key then
+        ngx.say('generate rsa keys err: ', err)
+    end
+
+    ngx.say(rsa_public_key)
+    --[[
+    -----BEGIN RSA PUBLIC KEY-----
+    MIIBCgKCAQEAuw4T755fepEyXTM66pzf6nv8NtnukQTMGnhmBFIFHp/P2vEpxjXU
+    BBDUpzKkVFR3wuK9O1FNmRDAGNGYC0N/9cZNdhykA1NixJfKQzncN31VJTmNqJNZ
+    W0x7H9ZGoh2aE0zCCZpRlC1Rf5rL0SVlBoQkn/n9LnYFwyLLIK5/d/y/NZVL6Z6L
+    cyvga0zRajamLIjY0Dy/8YIwVV6kaSsHeRv2cOB03eam6gbhLGIz/l8wuJhIn1rO
+    yJLQ36IOJymbbNmcC7+2hEQJP40qLvH7hZ1LaAkgQUHjfi8RvH2T1Jmce7XGPxCo
+    Ed0yfeFz+pL1KeSWNey6cL3N5hJZE8EntQIDAQAB
+    -----END RSA PUBLIC KEY-----
+    ]]--
+
+    ngx.say(rsa_private_key)
+    --[[
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEpAIBAAKCAQEAuw4T755fepEyXTM66pzf6nv8NtnukQTMGnhmBFIFHp/P2vEp
+    xjXUBBDUpzKkVFR3wuK9O1FNmRDAGNGYC0N/9cZNdhykA1NixJfKQzncN31VJTmN
+    qJNZW0x7H9ZGoh2aE0zCCZpRlC1Rf5rL0SVlBoQkn/n9LnYFwyLLIK5/d/y/NZVL
+    6Z6Lcyvga0zRajamLIjY0Dy/8YIwVV6kaSsHeRv2cOB03eam6gbhLGIz/l8wuJhI
+    n1rOyJLQ36IOJymbbNmcC7+2hEQJP40qLvH7hZ1LaAkgQUHjfi8RvH2T1Jmce7XG
+    PxCoEd0yfeFz+pL1KeSWNey6cL3N5hJZE8EntQIDAQABAoIBAGim1ayIFK8EMQNH
+    uDyui/Aqcc9WWky0PGTK23irUsXxb1708gQ89WNY70Cj6qBrqZ1VMb3QHPP4FSFN
+    kh0rJJoi2g+ssm5R5r5KlhTKeFRrQInVC1Y3KhUUUwZa4aWtnhgSJ7Urq1yVhjU4
+    K7PVkhH1OHBwcp/d1Bd6jd65AgPkY63P+WpcARJkClmQ1RhgoRwThyJdpKrV4/gO
+    ha0AUGlJNRNvRwiZxP0zaI5C8RdrG96SnVpeYOcD0z/M1HVlkoYMXsXLKttwLfpK
+    88Igtm6ZJwRpfuMF5VA+9hHaYGCBdGz0B/rMp2fc+EtrOavYQGrWIWi2RL1Qk6Rt
+    BUyeTgECgYEA9anj4n/cak1MT+hbNFsL31mJXryl1eVNjEZj/iPMztpdS15CmFgj
+    Kjr9UuintjSiK7Is43nZUWWyP1XQjRhVi2uP7PRIv92QNl/YteWD6tYCInJHKe2J
+    QqYyZrElezsdayXb5DK6bi1UIYYji90g79N7x6pOR0UnQNQUXTv+Y8ECgYEAwuzl
+    6Ez4BSXIIL9NK41jfNMa73Utfl5oO1f6mHM2KbILqaFE76PSgEeXDbOKdcjCbbqC
+    KCGjwyPd+Clehg4vkYXTq1y2SQGHwfz7DilPSOxhPY9ND7lGbeNzDUK4x8xe52hd
+    MWKdgqeqCK83e5D0ihzRiMah8dbxmlfLAOZ3sPUCgYEA0dT9Czg/YqUHq7FCReQG
+    rg3iYgMsexjTNh/hxO97PqwRyBCJPWr7DlU4j5qdteobIsubv+kSEI6Ww7Ze3kWM
+    u/tyAeleQlPTnD4d8rBKD0ogpJ+L3WpBNaaToldpNmr149GAktgpmXYqSEA1GIAW
+    ZAL11UPIfOO6dYswobpevYECgYEApSosSODnCx2PbMgL8IpWMU+DNEF6sef2s8oB
+    aam9zCi0HyCqE9AhLlb61D48ZT8eF/IAFVcjttauX3dWQ4rDna/iwgHF5yhnyuS8
+    KayxJJ4+avYAmwEnfzdJpoPRpGI0TCovRQhFZI8C0Wb+QTJ7Mofmt9lvIUc64sff
+    GD0wT/0CgYASMf708dmc5Bpzcis++EgMJVb0q+ORmWzSai1NB4bf3LsNS6suWNNU
+    zj/JGtMaGvQo5vzGU4exNkhpQo8yUU5YbHlA8RCj7SYkmP78kCewEqxlx7dbcuj2
+    LAPWpiDca8StTfEphoKEVfCPHaUk0MlBHR4lCrnAkEtz23vhZKWhFw==
+    -----END RSA PRIVATE KEY-----
+    ]]--
+
+    local pub, err = resty_rsa:new({ public_key = rsa_public_key })
     if not pub then
         ngx.say("new rsa err: ", err)
         return
@@ -70,7 +93,7 @@ Synopsis
     end
     ngx.say("encrypted length: ", #encrypted)
 
-    local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY })
+    local priv, err = resty_rsa:new({ private_key = rsa_priv_key })
     if not priv then
         ngx.say("new rsa err: ", err)
         return
@@ -79,7 +102,7 @@ Synopsis
     ngx.say(decrypted == "hello")
 
     local algorithm = "SHA"
-    local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY, algorithm = algorithm })
+    local priv, err = resty_rsa:new({ private_key = rsa_priv_key, algorithm = algorithm })
     if not priv then
         ngx.say("new rsa err: ", err)
         return
@@ -93,7 +116,7 @@ Synopsis
     end
     ngx.say("sig length: ", #sig)
 
-    local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY, algorithm = algorithm })
+    local pub, err = resty_rsa:new({ public_key = rsa_public_key, algorithm = algorithm })
     if not pub then
         ngx.say("new rsa err: ", err)
         return
@@ -118,6 +141,12 @@ To load this library,
 ```lua
     local rsa = require "resty.rsa"
 ```
+
+generate_rsa_keys
+---
+`syntax: public_key, private_key, err = rsa:generate_rsa_keys(bits)`
+
+    Generate rsa public key and private key by specifying the number of bits.
 
 new
 ---
