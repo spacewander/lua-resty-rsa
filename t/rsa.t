@@ -624,3 +624,27 @@ encrypted length: 256
 true
 --- no_error_log
 [error]
+
+
+
+=== TEST 12: report generate RSA keypair error
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local rsa_public_key, rsa_private_key, err = resty_rsa:generate_rsa_keys(0)
+            if not (rsa_public_key and rsa_private_key) then
+                ngx.say(err)
+            end
+
+            collectgarbage()
+        }
+    }
+--- request
+GET /t
+--- response_body
+key size too small
+--- no_error_log
+[error]

@@ -140,18 +140,18 @@ function _M.generate_rsa_keys(_, bits)
 
     -- Set public exponent to 65537
     if C.BN_set_word(bn, 65537) ~= 1 then
-        return err()
+        return nil, err()
     end
 
     -- Generate key
     if C.RSA_generate_key_ex(rsa, bits, bn, nil) ~= 1 then
-        return err()
+        return nil, err()
     end
 
     local pub_key_bio = C.BIO_new(C.BIO_s_mem())
     ffi_gc(pub_key_bio, C.BIO_vfree)
     if C.PEM_write_bio_RSAPublicKey(pub_key_bio, rsa) ~= 1 then
-        return err()
+        return nil, err()
     end
     local public_key, err = read_bio(pub_key_bio)
     if not public_key then
@@ -161,7 +161,7 @@ function _M.generate_rsa_keys(_, bits)
     local priv_key_bio = C.BIO_new(C.BIO_s_mem())
     ffi_gc(priv_key_bio, C.BIO_vfree)
     if C.PEM_write_bio_RSAPrivateKey(priv_key_bio, rsa, nil, nil, 0, nil, nil) ~= 1 then
-        return err()
+        return nil, err()
     end
     local private_key, err = read_bio(priv_key_bio)
     if not private_key then
