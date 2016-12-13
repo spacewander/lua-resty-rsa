@@ -93,6 +93,7 @@ typedef struct env_md_st EVP_MD;
 typedef struct env_md_ctx_st EVP_MD_CTX;
 const EVP_MD *EVP_get_digestbyname(const char *name);
 EVP_MD_CTX *EVP_MD_CTX_create(void);
+void EVP_MD_CTX_destroy(EVP_MD_CTX *ctx);
 
 int EVP_DigestInit(EVP_MD_CTX *ctx, const EVP_MD *type);
 int EVP_DigestUpdate(EVP_MD_CTX *ctx, const unsigned char *in, int inl);
@@ -172,7 +173,7 @@ function _M.generate_rsa_keys(_, bits)
 end
 
 function _M.new(self, opts)
-    local key, read_func, is_pub, md_ctx, md
+    local key, read_func, is_pub, md
 
     if opts.public_key then
         key = opts.public_key
@@ -232,7 +233,6 @@ function _M.new(self, opts)
             return nil, "Unknown message digest"
         end
 
-        md_ctx = C.EVP_MD_CTX_create()
     end
 
     -- ctx init for encrypt or decrypt
@@ -257,8 +257,7 @@ function _M.new(self, opts)
             buf = ffi_new("unsigned char[?]", size),
             _encrypt_ctx = is_pub and ctx or nil,
             _decrypt_ctx = not is_pub and ctx or nil,
-            _sign_ctx = not is_pub and md_ctx or nil,
-            _verify_ctx = is_pub and md_ctx or nil,
+            is_pub = is_pub,
             md = md,
         }, mt)
 end
@@ -305,10 +304,12 @@ end
 
 
 function _M.sign(self, str)
-    local md_ctx = self._sign_ctx
-    if not md_ctx then
+    if self.is_pub then
         return nil, "not inited for sign"
     end
+
+    local md_ctx = C.EVP_MD_CTX_create()
+    ffi_gc(md_ctx, C.EVP_MD_CTX_destroy)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
         return err()
@@ -329,10 +330,12 @@ end
 
 
 function _M.verify(self, str, sig)
-    local md_ctx = self._verify_ctx
-    if not md_ctx then
+    if not self.is_pub then
         return nil, "not inited for verify"
     end
+
+    local md_ctx = C.EVP_MD_CTX_create()
+    ffi_gc(md_ctx, C.EVP_MD_CTX_destroy)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
         return err()
