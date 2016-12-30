@@ -1,0 +1,68 @@
+{
+    <insert_a_suppression_name_here>
+    Memcheck:Value8
+    obj:*
+}
+{
+    <insert_a_suppression_name_here>
+    Memcheck:Cond
+    obj:/usr/lib64/libcrypto.so*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:lj_*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:lua_*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:malloc
+   fun:ngx_alloc
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:str_fastcmp
+   fun:lj_str_new
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:tmalloc_small
+   fun:lj_alloc_malloc
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:memcpy@@*
+   fun:SHA1_Update
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:is_overlap
+   fun:memcpy@@*
+   fun:SHA1_Update
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:memset
+   fun:lj_cf_ffi_new
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:malloc
+   fun:CRYPTO_malloc
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:gc_*
+}
