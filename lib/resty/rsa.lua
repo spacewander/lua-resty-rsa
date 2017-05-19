@@ -41,6 +41,8 @@ RSA * PEM_read_bio_RSAPrivateKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
 								void *u);
 RSA * PEM_read_bio_RSAPublicKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
                                 void *u);
+RSA * PEM_read_bio_RSA_PUBKEY(BIO *bp, RSA **rsa, pem_password_cb *cb,
+                                void *u);
 
 unsigned long ERR_get_error(void);
 const char * ERR_reason_error_string(unsigned long e);
@@ -177,7 +179,11 @@ function _M.new(self, opts)
 
     if opts.public_key then
         key = opts.public_key
-        read_func = C.PEM_read_bio_RSAPublicKey
+        if("DER" == opts.key_type) then
+            read_func = C.PEM_read_bio_RSA_PUBKEY
+        else
+            read_func = C.PEM_read_bio_RSAPublicKey
+        end
         is_pub = true
 
     elseif opts.private_key then
