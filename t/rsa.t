@@ -222,7 +222,14 @@ false
         content_by_lua_block {
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
-            for name, padding in pairs(resty_rsa.PADDING) do
+            local padding_names = {}
+            for name, _ in pairs(resty_rsa.PADDING) do
+                padding_names[#padding_names+1] = name
+            end
+            table.sort(padding_names)
+
+            for _, name in ipairs(padding_names) do
+                local padding = resty_rsa.PADDING[name]
                 local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY, padding = padding })
                 if not pub then
                     ngx.say("new rsa err: ", err)
@@ -247,10 +254,10 @@ false
 --- request
 GET /t
 --- response_body
-RSA_PKCS1_PADDING:117
 RSA_NO_PADDING:0
-RSA_SSLV23_PADDING:117
 RSA_PKCS1_OAEP_PADDING:86
+RSA_PKCS1_PADDING:117
+RSA_SSLV23_PADDING:117
 --- no_error_log
 [error]
 
