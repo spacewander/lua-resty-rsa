@@ -38,8 +38,8 @@ RSA *RSA_new(void);
 void RSA_free(RSA *rsa);
 typedef int pem_password_cb(char *buf, int size, int rwflag, void *userdata);
 RSA * PEM_read_bio_RSAPrivateKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
-								void *u);
-RSA * PEM_read_bio_RSAPublicKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
+                                void *u);
+RSA * PEM_read_bio_RSA_PUBKEY(BIO *bp, RSA **rsa, pem_password_cb *cb,
                                 void *u);
 
 unsigned long ERR_get_error(void);
@@ -57,7 +57,7 @@ typedef struct evp_cipher_st EVP_CIPHER;
 int PEM_write_bio_RSAPrivateKey(BIO *bp, RSA *x, const EVP_CIPHER *enc,
                                 unsigned char *kstr, int klen,
                                 pem_password_cb *cb, void *u);
-int PEM_write_bio_RSAPublicKey(BIO *bp, RSA *x);
+int PEM_write_bio_RSA_PUBKEY(BIO *bp, RSA *x);
 
 long BIO_ctrl(BIO *bp, int cmd, long larg, void *parg);
 int BIO_read(BIO *b, void *data, int len);
@@ -151,7 +151,7 @@ function _M.generate_rsa_keys(_, bits)
 
     local pub_key_bio = C.BIO_new(C.BIO_s_mem())
     ffi_gc(pub_key_bio, C.BIO_vfree)
-    if C.PEM_write_bio_RSAPublicKey(pub_key_bio, rsa) ~= 1 then
+    if C.PEM_write_bio_RSA_PUBKEY(pub_key_bio, rsa) ~= 1 then
         return nil, err()
     end
     local public_key, err = read_bio(pub_key_bio)
@@ -177,7 +177,7 @@ function _M.new(self, opts)
 
     if opts.public_key then
         key = opts.public_key
-        read_func = C.PEM_read_bio_RSAPublicKey
+        read_func = C.PEM_read_bio_RSA_PUBKEY
         is_pub = true
 
     elseif opts.private_key then
