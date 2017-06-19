@@ -114,7 +114,7 @@ local EVP_PKEY_CTRL_RSA_PADDING = EVP_PKEY_ALG_CTRL + 1
 local NID_rsaEncryption = 6
 local EVP_PKEY_RSA = NID_rsaEncryption
 
-local function err()
+local function ssl_err()
     local code = C.ERR_get_error()
 
     local err = C.ERR_reason_error_string(code)
@@ -127,7 +127,7 @@ local function read_bio(bio)
     local keylen = C.BIO_ctrl(bio, BIO_CTRL_PENDING, 0, nil);
     local key = ffi.new("char[?]", keylen)
     if C.BIO_read(bio, key, keylen) < 0 then
-        return err()
+        return ssl_err()
     end
     return ffi_str(key)
 end
@@ -141,18 +141,18 @@ function _M.generate_rsa_keys(_, bits)
 
     -- Set public exponent to 65537
     if C.BN_set_word(bn, 65537) ~= 1 then
-        return nil, err()
+        return nil, ssl_err()
     end
 
     -- Generate key
     if C.RSA_generate_key_ex(rsa, bits, bn, nil) ~= 1 then
-        return nil, err()
+        return nil, ssl_err()
     end
 
     local pub_key_bio = C.BIO_new(C.BIO_s_mem())
     ffi_gc(pub_key_bio, C.BIO_vfree)
     if C.PEM_write_bio_RSAPublicKey(pub_key_bio, rsa) ~= 1 then
-        return nil, err()
+        return nil, ssl_err()
     end
     local public_key, err = read_bio(pub_key_bio)
     if not public_key then
@@ -162,9 +162,10 @@ function _M.generate_rsa_keys(_, bits)
     local priv_key_bio = C.BIO_new(C.BIO_s_mem())
     ffi_gc(priv_key_bio, C.BIO_vfree)
     if C.PEM_write_bio_RSAPrivateKey(priv_key_bio, rsa, nil, nil, 0, nil, nil) ~= 1 then
-        return nil, err()
+        return nil, ssl_err()
     end
-    local private_key, err = read_bio(priv_key_bio)
+    local private_key
+    private_key, err = read_bio(priv_key_bio)
     if not private_key then
         return nil, nil, err
     end
@@ -172,7 +173,7 @@ function _M.generate_rsa_keys(_, bits)
     return public_key, private_key
 end
 
-function _M.new(self, opts)
+function _M.new(_, opts)
     local key, read_func, is_pub, md
 
     if opts.public_key then
@@ -194,7 +195,7 @@ function _M.new(self, opts)
 
     local len = C.BIO_puts(bio, key)
     if len < 0 then
-        return err()
+        return ssl_err()
     end
 
     local pass
@@ -206,7 +207,7 @@ function _M.new(self, opts)
 
     local rsa = read_func(bio, nil, nil, pass)
     if ffi_cast("void *", rsa) == nil then
-        return err()
+        return ssl_err()
     end
     ffi_gc(rsa, C.RSA_free)
 
@@ -214,13 +215,13 @@ function _M.new(self, opts)
     local pkey = C.EVP_PKEY_new()
     ffi_gc(pkey, C.EVP_PKEY_free)
     if C.EVP_PKEY_set1_RSA(pkey, rsa) == 0 then
-        return err()
+        return ssl_err()
     end
 
     --EVP_PKEY_CTX
     local ctx = C.EVP_PKEY_CTX_new(pkey, nil)
     if ffi_cast("void *", ctx) == nil then
-        return err()
+        return ssl_err()
     end
     ffi_gc(ctx, C.EVP_PKEY_CTX_free)
 
@@ -241,12 +242,12 @@ function _M.new(self, opts)
         local init_func = is_pub and C.EVP_PKEY_encrypt_init
                             or C.EVP_PKEY_decrypt_init
         if init_func(ctx) <= 0 then
-            return err()
+            return ssl_err()
         end
 
         if C.EVP_PKEY_CTX_ctrl(ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING,
                 opts.padding or PADDING.RSA_PKCS1_PADDING, nil) <= 0 then
-            return err()
+            return ssl_err()
         end
     end
 
@@ -271,12 +272,12 @@ function _M.decrypt(self, str)
 
     local len = ffi_new("size_t [1]")
     if C.EVP_PKEY_decrypt(ctx, nil, len, str, #str) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     local buf = self.buf
     if C.EVP_PKEY_decrypt(ctx, buf, len, str, #str) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     return ffi_str(buf, len[0])
@@ -291,12 +292,12 @@ function _M.encrypt(self, str)
 
     local len = ffi_new("size_t [1]")
     if C.EVP_PKEY_encrypt(ctx, nil, len, str, #str) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     local buf = self.buf
     if C.EVP_PKEY_encrypt(ctx, buf, len, str, #str) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     return ffi_str(buf, len[0])
@@ -312,17 +313,17 @@ function _M.sign(self, str)
     ffi_gc(md_ctx, C.EVP_MD_CTX_destroy)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     if C.EVP_DigestUpdate(md_ctx, str, #str) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     local buf = self.buf
     local len = ffi_new("unsigned int[1]")
     if C.EVP_SignFinal(md_ctx, self.buf, len, self.pkey) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     return ffi_str(buf, len[0])
@@ -338,18 +339,18 @@ function _M.verify(self, str, sig)
     ffi_gc(md_ctx, C.EVP_MD_CTX_destroy)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     if C.EVP_DigestUpdate(md_ctx, str, #str) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     local siglen = #sig
     local buf = siglen <= self.size and self.buf or ffi_new("unsigned char[?]", siglen)
     ffi_copy(buf, sig, siglen)
     if C.EVP_VerifyFinal(md_ctx, buf, siglen, self.pkey) <= 0 then
-        return err()
+        return ssl_err()
     end
 
     return true
