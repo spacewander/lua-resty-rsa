@@ -643,7 +643,7 @@ true
             local resty_rsa = require "resty.rsa"
             local rsa_public_key, rsa_private_key, err = resty_rsa:generate_rsa_keys(0)
             if not (rsa_public_key and rsa_private_key) then
-                ngx.say(err)
+                ngx.say("generated rsa keys err: ", err)
             end
 
             collectgarbage()
@@ -651,7 +651,7 @@ true
     }
 --- request
 GET /t
---- response_body
-key size too small
+--- response_body_like
+generated rsa keys err: .+$
 --- no_error_log
 [error]
