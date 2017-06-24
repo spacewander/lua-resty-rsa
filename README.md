@@ -6,7 +6,9 @@ lua-resty-rsa - RSA functions for LuaJIT
 Status
 ======
 
-This library is considered experimental.
+This library is considered production ready.
+
+Build status: [![Travis](https://travis-ci.org/doujiang24/lua-resty-rsa.svg?branch=master)](https://travis-ci.org/doujiang24/lua-resty-rsa)
 
 
 Description
