@@ -164,6 +164,14 @@ Specifies the public rsa key.
 Specifies the private rsa key.
 * `password`
 Specifies the password to read rsa key.
+* `key_type`
+Specifies the type of given key.
+
+| `key_type` value | meaning |
+| ------------------- | ------ |
+| PKCS1 | The input key is in PKCS#1 format(usually starts with `-----BEGIN RSA PUBLIC`), which is the default. |
+| PKCS8 | The input key is in PKCS#8 format(usually starts with `-----BEGIN PUBLIC`). PKCS#8 format of private key has not been supported yet. |
+
 * `padding`
 Specifies the padding mode when you want to encrypt/decrypt.
 * `algorithm`

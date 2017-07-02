@@ -98,6 +98,15 @@ nPiSlearb/PMPJnq494/0QD5dTmXTEtiDDoM67wmF3G/8jaqbZ0zb1XtrvclMddU
 RCxMyDrtIHNmD2uVFQefpY+6OiTaOsWYiK9FtPQwswue1NjPtXrClKt+gzJkCAd6
 -----END RSA PRIVATE KEY-----
 ]]
+
+local RSA_PKCS8_PUB_KEY = [[
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCfWKhQk5YZ5k2DQnszH8u8m+8c
+AM0Yp17qdWZedede64SavFtMFcDbfpnCsEc4rANUiKjxpYYsg29kSSnNXAja1TX4
++8cTigiIoZCLEyCl8w33gKq5tG1PNAUo4I4+mFCmYp1AAAj6GqPL/kBaEZV5bAMu
+9pmO4qVZyagXdQDj1QIDAQAB
+-----END PUBLIC KEY-----
+]]
 ';
 
 #log_level 'warn';
@@ -653,5 +662,95 @@ true
 GET /t
 --- response_body_like
 generated rsa keys err: .+$
+--- no_error_log
+[error]
+
+
+
+=== TEST 13: support PKCS#8 format public key(encrypt)
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local pub, err = resty_rsa:new({
+                public_key = RSA_PKCS8_PUB_KEY,
+                key_type = resty_rsa.KEY_TYPE.PKCS8,
+            })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local encrypted, err = pub:encrypt("hello")
+            if not encrypted then
+                ngx.say("failed to encrypt: ", err)
+                return
+            end
+
+            local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local decrypted = priv:decrypt(encrypted)
+            ngx.say(decrypted == "hello")
+
+            collectgarbage()
+        }
+    }
+--- request
+GET /t
+--- response_body
+true
+--- no_error_log
+[error]
+
+
+
+=== TEST 14: support PKCS#8 format public key(verify)
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local algorithm = "SHA256"
+            local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY, algorithm = algorithm })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+
+            local str = "hello"
+            local sig, err = priv:sign(str)
+            if not sig then
+                ngx.say("failed to sign:", err)
+                return
+            end
+
+            local pub, err = resty_rsa:new({
+                public_key = RSA_PKCS8_PUB_KEY,
+                key_type = resty_rsa.KEY_TYPE.PKCS8,
+                algorithm = algorithm,
+            })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local verify, err = pub:verify(str, sig)
+            if not verify then
+                ngx.say("verify err: ", err)
+                return
+            end
+            ngx.say(verify)
+
+            collectgarbage()
+        }
+    }
+--- request
+GET /t
+--- response_body
+true
 --- no_error_log
 [error]

@@ -24,6 +24,11 @@ local PADDING = {
 }
 _M.PADDING = PADDING
 
+_M.KEY_TYPE = {
+    PKCS1 = "PKCS#1",
+    PKCS8 = "PKCS#8",
+}
+
 
 ffi.cdef[[
 typedef struct bio_st BIO;
@@ -40,6 +45,8 @@ typedef int pem_password_cb(char *buf, int size, int rwflag, void *userdata);
 RSA * PEM_read_bio_RSAPrivateKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
 								void *u);
 RSA * PEM_read_bio_RSAPublicKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
+                                void *u);
+RSA * PEM_read_bio_RSA_PUBKEY(BIO *bp, RSA **rsa, pem_password_cb *cb,
                                 void *u);
 
 unsigned long ERR_get_error(void);
@@ -173,12 +180,16 @@ function _M.generate_rsa_keys(_, bits)
     return public_key, private_key
 end
 
-function _M.new(_, opts)
+function _M.new(self, opts)
     local key, read_func, is_pub, md
 
     if opts.public_key then
         key = opts.public_key
-        read_func = C.PEM_read_bio_RSAPublicKey
+        if opts.key_type == self.KEY_TYPE.PKCS8 then
+            read_func = C.PEM_read_bio_RSA_PUBKEY
+        else
+            read_func = C.PEM_read_bio_RSAPublicKey
+        end
         is_pub = true
 
     elseif opts.private_key then
