@@ -615,6 +615,8 @@ true
                 ngx.say("new rsa err: ", err)
                 return
             end
+            ngx.say(rsa_public_key)
+            ngx.say(rsa_private_key)
             local encrypted, err = pub:encrypt("hello")
             if not encrypted then
                 ngx.say("failed to encrypt: ", err)
