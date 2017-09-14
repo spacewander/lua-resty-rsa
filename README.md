@@ -52,7 +52,7 @@ Synopsis
     -----END RSA PUBLIC KEY-----
     ]]--
 
-    ngx.say(rsa_private_key)
+    ngx.say(rsa_priv_key)
     --[[
     -----BEGIN RSA PRIVATE KEY-----
     MIIEpAIBAAKCAQEAuw4T755fepEyXTM66pzf6nv8NtnukQTMGnhmBFIFHp/P2vEp
