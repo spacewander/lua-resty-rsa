@@ -30,5 +30,8 @@ install:
 
 script:
   - openresty -V
+  - echo $PATH
+  - nginx -V
+  - export PATH=$PATH:/usr/local/openresty/nginx/sbin
   - prove -r t
   - bash test_with_valgrind.sh
