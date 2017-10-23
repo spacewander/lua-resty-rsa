@@ -29,6 +29,7 @@ install:
   - sudo apt-get install -y --no-install-recommends openresty
 
 script:
+  - export PATH=$PATH:/usr/local/openresty/nginx/sbin
   - openresty -V
   - prove -r t
   - bash test_with_valgrind.sh
