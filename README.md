@@ -146,9 +146,11 @@ To load this library,
 
 generate_rsa_keys
 ---
-`syntax: public_key, private_key, err = rsa:generate_rsa_keys(bits)`
+`syntax: public_key, private_key, err = rsa:generate_rsa_keys(bits, in_pkcs8_fmt)`
 
     Generate rsa public key and private key by specifying the number of bits.
+    The `in_pkcs8_fmt` is optional. If `in_pkcs8_fmt` is true, the generated keys are in PKCS#8 format, which start with `-----BEGIN PUBLIC` or `-----BEGIN PRIVATE`.
+    Otherwise the generated keys are in PKCS#1 format, which start with `-----BEGIN RSA`.
 
 new
 ---

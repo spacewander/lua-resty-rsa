@@ -35,7 +35,7 @@ typedef struct bio_st BIO;
 typedef struct bio_method_st BIO_METHOD;
 BIO_METHOD *BIO_s_mem(void);
 BIO * BIO_new(BIO_METHOD *type);
-int	BIO_puts(BIO *bp,const char *buf);
+int BIO_puts(BIO *bp, const char *buf);
 void BIO_vfree(BIO *a);
 
 typedef struct rsa_st RSA;
@@ -43,7 +43,7 @@ RSA *RSA_new(void);
 void RSA_free(RSA *rsa);
 typedef int pem_password_cb(char *buf, int size, int rwflag, void *userdata);
 RSA * PEM_read_bio_RSAPrivateKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
-								void *u);
+                                 void *u);
 RSA * PEM_read_bio_RSAPublicKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
                                 void *u);
 RSA * PEM_read_bio_RSA_PUBKEY(BIO *bp, RSA **rsa, pem_password_cb *cb,
@@ -65,6 +65,7 @@ int PEM_write_bio_RSAPrivateKey(BIO *bp, RSA *x, const EVP_CIPHER *enc,
                                 unsigned char *kstr, int klen,
                                 pem_password_cb *cb, void *u);
 int PEM_write_bio_RSAPublicKey(BIO *bp, RSA *x);
+int PEM_write_bio_RSA_PUBKEY(BIO *bp, RSA *x);
 
 long BIO_ctrl(BIO *bp, int cmd, long larg, void *parg);
 int BIO_read(BIO *b, void *data, int len);
@@ -75,7 +76,6 @@ typedef struct evp_pkey_ctx_st EVP_PKEY_CTX;
 
 EVP_PKEY *EVP_PKEY_new(void);
 void EVP_PKEY_free(EVP_PKEY *key);
-int EVP_PKEY_set1_RSA(EVP_PKEY *pkey,RSA *key);
 
 EVP_PKEY_CTX *EVP_PKEY_CTX_new(EVP_PKEY *pkey, ENGINE *e);
 void EVP_PKEY_CTX_free(EVP_PKEY_CTX *ctx);
@@ -95,6 +95,10 @@ int EVP_PKEY_decrypt(EVP_PKEY_CTX *ctx,
                      unsigned char *out, size_t *outlen,
                      const unsigned char *in, size_t inlen);
 
+int EVP_PKEY_set1_RSA(EVP_PKEY *pkey, RSA *key);
+int PEM_write_bio_PKCS8PrivateKey(BIO *bp, EVP_PKEY *x, const EVP_CIPHER *enc,
+                                  char *kstr, int klen, pem_password_cb *cb, void *u);
+
 void OpenSSL_add_all_digests(void);
 typedef struct env_md_st EVP_MD;
 typedef struct env_md_ctx_st EVP_MD_CTX;
@@ -106,6 +110,7 @@ int EVP_DigestInit(EVP_MD_CTX *ctx, const EVP_MD *type);
 int EVP_DigestUpdate(EVP_MD_CTX *ctx, const unsigned char *in, int inl);
 int EVP_SignFinal(EVP_MD_CTX *ctx,unsigned char *sig,unsigned int *s, EVP_PKEY *pkey);
 int EVP_VerifyFinal(EVP_MD_CTX *ctx,unsigned char *sigbuf, unsigned int siglen,EVP_PKEY *pkey);
+int EVP_PKEY_set1_RSA(EVP_PKEY *e, RSA *r);
 ]]
 --[[
 # define EVP_PKEY_CTX_set_rsa_padding(ctx, pad) \
@@ -140,7 +145,7 @@ local function read_bio(bio)
 end
 
 -- Follow the calling style to avoid careless mistake.
-function _M.generate_rsa_keys(_, bits)
+function _M.generate_rsa_keys(_, bits, pkcs8)
     local rsa = C.RSA_new()
     ffi_gc(rsa, C.RSA_free)
     local bn = C.BN_new()
@@ -158,9 +163,16 @@ function _M.generate_rsa_keys(_, bits)
 
     local pub_key_bio = C.BIO_new(C.BIO_s_mem())
     ffi_gc(pub_key_bio, C.BIO_vfree)
-    if C.PEM_write_bio_RSAPublicKey(pub_key_bio, rsa) ~= 1 then
-        return nil, ssl_err()
+    if pkcs8 == true then
+        if C.PEM_write_bio_RSA_PUBKEY(pub_key_bio, rsa) ~= 1 then
+            return nil, ssl_err()
+        end
+    else
+        if C.PEM_write_bio_RSAPublicKey(pub_key_bio, rsa) ~= 1 then
+             return nil, ssl_err()
+        end
     end
+
     local public_key, err = read_bio(pub_key_bio)
     if not public_key then
         return nil, nil, err
@@ -168,9 +180,21 @@ function _M.generate_rsa_keys(_, bits)
 
     local priv_key_bio = C.BIO_new(C.BIO_s_mem())
     ffi_gc(priv_key_bio, C.BIO_vfree)
-    if C.PEM_write_bio_RSAPrivateKey(priv_key_bio, rsa, nil, nil, 0, nil, nil) ~= 1 then
-        return nil, ssl_err()
+    if pkcs8 == true then
+        local pk = C.EVP_PKEY_new()
+        ffi_gc(pk, C.EVP_PKEY_free)
+        if C.EVP_PKEY_set1_RSA(pk,rsa) ~= 1 then
+            return nil, ssl_err()
+        end
+        if C.PEM_write_bio_PKCS8PrivateKey(priv_key_bio, pk, nil, nil, 0, nil, nil) ~= 1 then
+            return nil, ssl_err()
+        end
+    else
+        if C.PEM_write_bio_RSAPrivateKey(priv_key_bio, rsa, nil, nil, 0, nil, nil) ~= 1 then
+            return nil, ssl_err()
+        end
     end
+
     local private_key
     private_key, err = read_bio(priv_key_bio)
     if not private_key then
