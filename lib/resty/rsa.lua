@@ -141,7 +141,7 @@ local function read_bio(bio)
     if C.BIO_read(bio, key, keylen) < 0 then
         return ssl_err()
     end
-    return ffi_str(key)
+    return ffi_str(key, keylen)
 end
 
 -- Follow the calling style to avoid careless mistake.
