@@ -643,7 +643,50 @@ true
 
 
 
-=== TEST 12: report generate RSA keypair error
+=== TEST 12: generate PKCS#8 format public key and private key
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local rsa_public_key, rsa_private_key, err = resty_rsa:generate_rsa_keys(2048, true)
+
+            local pub, err = resty_rsa:new({
+                public_key = rsa_public_key,
+                key_type = resty_rsa.KEY_TYPE.PKCS8,
+            })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local encrypted, err = pub:encrypt("hello")
+            if not encrypted then
+                ngx.say("failed to encrypt: ", err)
+                return
+            end
+
+            local priv, err = resty_rsa:new({ private_key = rsa_private_key })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local decrypted = priv:decrypt(encrypted)
+            ngx.say(decrypted == "hello")
+
+            collectgarbage()
+        }
+    }
+--- request
+GET /t
+--- response_body
+true
+--- no_error_log
+[error]
+
+
+
+=== TEST 13: report generate RSA keypair error
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -667,7 +710,7 @@ generated rsa keys err: .+$
 
 
 
-=== TEST 13: support PKCS#8 format public key(encrypt)
+=== TEST 14: support PKCS#8 format public key(encrypt)
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -708,7 +751,7 @@ true
 
 
 
-=== TEST 14: support PKCS#8 format public key(verify)
+=== TEST 15: support PKCS#8 format public key(verify)
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
