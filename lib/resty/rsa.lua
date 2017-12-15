@@ -262,8 +262,6 @@ function _M.new(self, opts)
 
     -- md_ctx init for sign or verify; if signature algorithm is seted
     if opts.algorithm then
-        C.OpenSSL_add_all_digests()
-
         md = C.EVP_get_digestbyname(opts.algorithm)
         if ffi_cast("void *", md) == nil then
             return nil, "Unknown message digest"
