@@ -103,7 +103,7 @@ Synopsis
     local decrypted = priv:decrypt(encrypted)
     ngx.say(decrypted == "hello")
 
-    local algorithm = "SHA1"
+    local algorithm = "SHA256"
     local priv, err = resty_rsa:new({ private_key = rsa_priv_key, algorithm = algorithm })
     if not priv then
         ngx.say("new rsa err: ", err)
