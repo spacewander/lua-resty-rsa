@@ -360,7 +360,7 @@ true
         content_by_lua_block {
             $TEST_NGINX_SHORT_PK_CONF
             local resty_rsa = require "resty.rsa"
-            local algorithm = "SHA"
+            local algorithm = "SHA256"
             local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY, algorithm = algorithm })
             if not priv then
                 ngx.say("new rsa err: ", err)
@@ -440,7 +440,7 @@ true
 GET /t
 --- response_body
 sig length: 128
-verify err: algorithm mismatch
+verify err: bad signature
 --- no_error_log
 [error]
 
@@ -458,7 +458,6 @@ verify err: algorithm mismatch
                 "MD4",
                 "MD5",
                 "RIPEMD160",
-                "SHA",
                 "SHA1",
                 "SHA224",
                 "SHA256",
@@ -467,7 +466,6 @@ verify err: algorithm mismatch
                 "md4",
                 "md5",
                 "ripemd160",
-                "sha",
                 "sha1",
                 "sha224",
                 "sha256",
@@ -476,7 +474,6 @@ verify err: algorithm mismatch
                 "RSA-MD4",
                 "RSA-MD5",
                 "RSA-RIPEMD160",
-                "RSA-SHA",
                 "RSA-SHA1",
                 "RSA-SHA1-2",
                 "RSA-SHA224",
@@ -493,8 +490,6 @@ verify err: algorithm mismatch
                 "sha256WithRSAEncryption",
                 "sha384WithRSAEncryption",
                 "sha512WithRSAEncryption",
-                "shaWithRSAEncryption",
-                "ssl2-md5",
                 "ssl3-md5",
                 "ssl3-sha1",
             }

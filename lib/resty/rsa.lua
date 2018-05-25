@@ -11,7 +11,7 @@ local C = ffi.C
 local setmetatable = setmetatable
 
 
-local _M = { _VERSION = '0.02' }
+local _M = { _VERSION = '0.03' }
 
 local mt = { __index = _M }
 
@@ -103,8 +103,8 @@ void OpenSSL_add_all_digests(void);
 typedef struct env_md_st EVP_MD;
 typedef struct env_md_ctx_st EVP_MD_CTX;
 const EVP_MD *EVP_get_digestbyname(const char *name);
-EVP_MD_CTX *EVP_MD_CTX_create(void);
-void EVP_MD_CTX_destroy(EVP_MD_CTX *ctx);
+EVP_MD_CTX *EVP_MD_CTX_new(void);
+void EVP_MD_CTX_free(EVP_MD_CTX *ctx);
 
 int EVP_DigestInit(EVP_MD_CTX *ctx, const EVP_MD *type);
 int EVP_DigestUpdate(EVP_MD_CTX *ctx, const unsigned char *in, int inl);
@@ -342,8 +342,8 @@ function _M.sign(self, str)
         return nil, "not inited for sign"
     end
 
-    local md_ctx = C.EVP_MD_CTX_create()
-    ffi_gc(md_ctx, C.EVP_MD_CTX_destroy)
+    local md_ctx = C.EVP_MD_CTX_new()
+    ffi_gc(md_ctx, C.EVP_MD_CTX_free)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
         return ssl_err()
@@ -368,8 +368,8 @@ function _M.verify(self, str, sig)
         return nil, "not inited for verify"
     end
 
-    local md_ctx = C.EVP_MD_CTX_create()
-    ffi_gc(md_ctx, C.EVP_MD_CTX_destroy)
+    local md_ctx = C.EVP_MD_CTX_new()
+    ffi_gc(md_ctx, C.EVP_MD_CTX_free)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
         return ssl_err()

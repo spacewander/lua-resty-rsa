@@ -191,9 +191,8 @@ Specifies the digest algorithm when you want to sign/verify.
 | `algorithm` value | meaning |
 | ------------------- | ------ |
 | md4/MD4/RSA-MD4/md4WithRSAEncryption | digest with `md4` |
-| md5/MD5/RSA-MD5/md5WithRSAEncryption/ssl2-md5/ssl3-md5 | digest with `md5` |
+| md5/MD5/RSA-MD5/md5WithRSAEncryption/ssl3-md5 | digest with `md5` |
 | ripemd160/RIPEMD160/RSA-RIPEM160/ripemd160WithRSA/rmd160 | digest with `ripemd160` |
-| sha/SHA/RSA-SHA/shaWithRSAEncryption | digest with `sha0` |
 | sha1/SHA1/RSA-SHA1/sha1WithRSAEncryption/ssl3-sha1 | digest with `sha1` |
 | sha224/SHA224/RSA-SHA224/sha224WithRSAEncryption | digest with `sha224` |
 | sha256/SHA256/RSA-SHA256/sha256WithRSAEncryption | digest with `sha256` |
