@@ -11,7 +11,7 @@ local C = ffi.C
 local setmetatable = setmetatable
 
 
-local _M = { _VERSION = '0.03' }
+local _M = { _VERSION = '0.04' }
 
 local mt = { __index = _M }
 
@@ -103,6 +103,12 @@ void OpenSSL_add_all_digests(void);
 typedef struct env_md_st EVP_MD;
 typedef struct env_md_ctx_st EVP_MD_CTX;
 const EVP_MD *EVP_get_digestbyname(const char *name);
+
+/* EVP_MD_CTX methods for OpenSSL < 1.1.0 */
+EVP_MD_CTX *EVP_MD_CTX_create(void);
+void EVP_MD_CTX_destroy(EVP_MD_CTX *ctx);
+
+/* EVP_MD_CTX methods for OpenSSL >= 1.1.0 */
 EVP_MD_CTX *EVP_MD_CTX_new(void);
 void EVP_MD_CTX_free(EVP_MD_CTX *ctx);
 
@@ -125,6 +131,16 @@ local EVP_PKEY_ALG_CTRL = 0x1000
 local EVP_PKEY_CTRL_RSA_PADDING = EVP_PKEY_ALG_CTRL + 1
 local NID_rsaEncryption = 6
 local EVP_PKEY_RSA = NID_rsaEncryption
+
+local evp_md_ctx_new
+local evp_md_ctx_free
+if not pcall(function () return C.EVP_MD_CTX_create end) then
+    evp_md_ctx_new = C.EVP_MD_CTX_new
+    evp_md_ctx_free = C.EVP_MD_CTX_free
+else
+    evp_md_ctx_new = C.EVP_MD_CTX_create
+    evp_md_ctx_free = C.EVP_MD_CTX_destroy
+end
 
 local function ssl_err()
     local code = C.ERR_get_error()
@@ -342,8 +358,8 @@ function _M.sign(self, str)
         return nil, "not inited for sign"
     end
 
-    local md_ctx = C.EVP_MD_CTX_new()
-    ffi_gc(md_ctx, C.EVP_MD_CTX_free)
+    local md_ctx = evp_md_ctx_new()
+    ffi_gc(md_ctx, evp_md_ctx_free)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
         return ssl_err()
@@ -368,8 +384,8 @@ function _M.verify(self, str, sig)
         return nil, "not inited for verify"
     end
 
-    local md_ctx = C.EVP_MD_CTX_new()
-    ffi_gc(md_ctx, C.EVP_MD_CTX_free)
+    local md_ctx = evp_md_ctx_new()
+    ffi_gc(md_ctx, evp_md_ctx_free)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
         return ssl_err()

@@ -438,9 +438,9 @@ true
     }
 --- request
 GET /t
---- response_body
+--- response_body_like
 sig length: 128
-verify err: bad signature
+verify err: (bad signature|algorithm mismatch)
 --- no_error_log
 [error]
 
