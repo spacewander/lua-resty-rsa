@@ -3,7 +3,6 @@
 
 local ffi = require "ffi"
 local ffi_new = ffi.new
-local ffi_cast = ffi.cast
 local ffi_gc = ffi.gc
 local ffi_copy = ffi.copy
 local ffi_str = ffi.string
@@ -24,10 +23,11 @@ local PADDING = {
 }
 _M.PADDING = PADDING
 
-_M.KEY_TYPE = {
+local KEY_TYPE = {
     PKCS1 = "PKCS#1",
     PKCS8 = "PKCS#8",
 }
+_M.KEY_TYPE = KEY_TYPE
 
 
 ffi.cdef[[
@@ -97,7 +97,8 @@ int EVP_PKEY_decrypt(EVP_PKEY_CTX *ctx,
 
 int EVP_PKEY_set1_RSA(EVP_PKEY *pkey, RSA *key);
 int PEM_write_bio_PKCS8PrivateKey(BIO *bp, EVP_PKEY *x, const EVP_CIPHER *enc,
-                                  char *kstr, int klen, pem_password_cb *cb, void *u);
+                                  char *kstr, int klen, pem_password_cb *cb,
+                                  void *u);
 
 void OpenSSL_add_all_digests(void);
 typedef struct env_md_st EVP_MD;
@@ -114,8 +115,10 @@ void EVP_MD_CTX_free(EVP_MD_CTX *ctx);
 
 int EVP_DigestInit(EVP_MD_CTX *ctx, const EVP_MD *type);
 int EVP_DigestUpdate(EVP_MD_CTX *ctx, const unsigned char *in, int inl);
-int EVP_SignFinal(EVP_MD_CTX *ctx,unsigned char *sig,unsigned int *s, EVP_PKEY *pkey);
-int EVP_VerifyFinal(EVP_MD_CTX *ctx,unsigned char *sigbuf, unsigned int siglen,EVP_PKEY *pkey);
+int EVP_SignFinal(EVP_MD_CTX *ctx,unsigned char *sig,unsigned int *s,
+                  EVP_PKEY *pkey);
+int EVP_VerifyFinal(EVP_MD_CTX *ctx,unsigned char *sigbuf, unsigned int siglen,
+                    EVP_PKEY *pkey);
 int EVP_PKEY_set1_RSA(EVP_PKEY *e, RSA *r);
 ]]
 --[[
@@ -202,11 +205,13 @@ function _M.generate_rsa_keys(_, bits, pkcs8)
         if C.EVP_PKEY_set1_RSA(pk,rsa) ~= 1 then
             return nil, ssl_err()
         end
-        if C.PEM_write_bio_PKCS8PrivateKey(priv_key_bio, pk, nil, nil, 0, nil, nil) ~= 1 then
+        if C.PEM_write_bio_PKCS8PrivateKey(priv_key_bio, pk,
+                                           nil, nil, 0, nil, nil) ~= 1 then
             return nil, ssl_err()
         end
     else
-        if C.PEM_write_bio_RSAPrivateKey(priv_key_bio, rsa, nil, nil, 0, nil, nil) ~= 1 then
+        if C.PEM_write_bio_RSAPrivateKey(priv_key_bio, rsa,
+                                         nil, nil, 0, nil, nil) ~= 1 then
             return nil, ssl_err()
         end
     end
@@ -220,12 +225,12 @@ function _M.generate_rsa_keys(_, bits, pkcs8)
     return public_key, private_key
 end
 
-function _M.new(self, opts)
+function _M.new(_, opts)
     local key, read_func, is_pub, md
 
     if opts.public_key then
         key = opts.public_key
-        if opts.key_type == self.KEY_TYPE.PKCS8 then
+        if opts.key_type == KEY_TYPE.PKCS8 then
             read_func = C.PEM_read_bio_RSA_PUBKEY
         else
             read_func = C.PEM_read_bio_RSAPublicKey
@@ -237,7 +242,7 @@ function _M.new(self, opts)
         read_func = C.PEM_read_bio_RSAPrivateKey
 
     else
-        return nil, "not found public_key or private_key"
+        return nil, "public_key or private_key not found"
     end
 
     local bio_method = C.BIO_s_mem()
@@ -257,7 +262,7 @@ function _M.new(self, opts)
     end
 
     local rsa = read_func(bio, nil, nil, pass)
-    if ffi_cast("void *", rsa) == nil then
+    if rsa == nil then
         return ssl_err()
     end
     ffi_gc(rsa, C.RSA_free)
@@ -271,7 +276,7 @@ function _M.new(self, opts)
 
     --EVP_PKEY_CTX
     local ctx = C.EVP_PKEY_CTX_new(pkey, nil)
-    if ffi_cast("void *", ctx) == nil then
+    if ctx == nil then
         return ssl_err()
     end
     ffi_gc(ctx, C.EVP_PKEY_CTX_free)
@@ -279,7 +284,7 @@ function _M.new(self, opts)
     -- md_ctx init for sign or verify; if signature algorithm is seted
     if opts.algorithm then
         md = C.EVP_get_digestbyname(opts.algorithm)
-        if ffi_cast("void *", md) == nil then
+        if md == nil then
             return nil, "Unknown message digest"
         end
 
@@ -396,7 +401,8 @@ function _M.verify(self, str, sig)
     end
 
     local siglen = #sig
-    local buf = siglen <= self.size and self.buf or ffi_new("unsigned char[?]", siglen)
+    local buf = siglen <= self.size and self.buf
+        or ffi_new("unsigned char[?]", siglen)
     ffi_copy(buf, sig, siglen)
     if C.EVP_VerifyFinal(md_ctx, buf, siglen, self.pkey) <= 0 then
         return ssl_err()
