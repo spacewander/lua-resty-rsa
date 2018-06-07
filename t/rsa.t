@@ -107,6 +107,43 @@ AM0Yp17qdWZedede64SavFtMFcDbfpnCsEc4rANUiKjxpYYsg29kSSnNXAja1TX4
 9pmO4qVZyagXdQDj1QIDAQAB
 -----END PUBLIC KEY-----
 ]]
+local RSA_PKCS8_PRIV_KEY = [[
+-----BEGIN PRIVATE KEY-----
+MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAJ9YqFCTlhnmTYNC
+ezMfy7yb7xwAzRinXup1Zl51517rhJq8W0wVwNt+mcKwRzisA1SIqPGlhiyDb2RJ
+Kc1cCNrVNfj7xxOKCIihkIsTIKXzDfeAqrm0bU80BSjgjj6YUKZinUAACPoao8v+
+QFoRlXlsAy72mY7ipVnJqBd1AOPVAgMBAAECgYEAl6BreVEW8co+U/q89Ob6nZzc
+KI9ymlUZco0IPjZ/VclSw1McpQfGHpcXhTTscLbt7FCmQls5k732Dz23c1xyZxk8
+4ILPho3Qtwq/2hVlDPcC/Pppit5IRLAs+rICCYkS+5V79x3CSGMC8hxvBziucjc4
+FEdebLaHdKY7QaTHcPkCQQDK9OusHEMJB5ZLigjamdqUfIuLVqkMj9afvqg0pb91
+DfpI9yowtPMaZ1/FWJSGHX3JJXmJ3wB11sT9vvbJAsK7AkEAyP3tUU8ic7CbZJpa
+be3DrR9sk5fG5YsLqW0R+oAwVy/3hlP9WmCe/3eOQX0MtAL8JYduNlu+1hOXOl6/
+FgvyrwJAeIAoeRyilHbjvl/rV9cnVygHNiiy4Bl6xYfOmMucPCSbaL0PWLHm8NNV
+oncwX9yctVPBsKEtxclJVpsOLVStRwJACaeI2rr+YKg/DpoLdfRRzeMQiBZmS2he
+awj+MBYwPD/ll+I47Tpu6L6JasPi9FKgYf0bYikOBaJzRS5/50MzqQJAXb9Rsvox
+koMLitV4UXe8mHsRJx+Z+yxD95UTPrfs3TranNK+8HjGroa31XCgZU2yfmv8roBt
+P6uZ7BbnsmjumA==
+-----END PRIVATE KEY-----
+]]
+local RSA_PKCS8_PASS_PRIV_KEY= [[
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIICoTAbBgkqhkiG9w0BBQMwDgQIyXIs862v86wCAggABIICgH+2henffS6sFSpE
+H2RE6zA5ml8i+aUtSu2Gl3b55uSdOSCZVTjwhos7hz5HdjHQ6wrdvdKQ2G49cS0D
+EQCcWlL0acADFouyULe4wNx0K2G5Xo8wfxgT0J29oZO5OWCWLcbMt2INRYG4cBKq
+HqdWDtV9IKWOxfu3s/F31us6Iph3XttFuCS73ndrducwx92TIBQpGqqmS2Wxgxd0
+58Uxp7VFdc/Y//3t6NhhO0bOGM8SYP/zR3PgY/hvWQbVaZs/bHHv16dVPUtnuPMS
+3K3tp4lxJ8FXieEok5FmPTC5estdZgOLx0KLItD6SgLNBIWExQb0uHzZd+X0XtQB
+yAGjbjdA4/yGL45Yits6cvN7Jl/WjhgZIXbROtZF2aYxHxfqW+GsBz771TROs/A+
+VT7MsyrBhT6eqmUmKssVfj7cYIiFBcDxMCj9B3yQQd5ulc/ymIElKWDkpc7wxQdp
+rlyeU9DY6IF52ej4hiL8r6vyhzo7TPXzn1aSUVAc0+16liyE4nuEZEeSf0scOI0b
+w25cIkrpraDVpRJMHR1g2uLkaA5rRNikBdgMjQBYNOahdrIIqe0J+mdw5nwcXya+
+MB+O//DfCBKApmk2xe6Is4hXeXhaXSLDcajbS0qvtfhcKFGQX8zGBhyH8ulsFDR7
+LDdgtUs/pGkfKmwtJuwsQW3rgxMqtPZ0MgQacRUf1BXLWUjJH6PNxRBz4pJCeOH/
+81fzPUxIwQVVKrFg4zXzzfYzH6nRjBtCZ/IjrX0FEecJrzuQRwa5pRWzqv0qCsEP
+LDCnJRRW0oidlb0yvCk4Wj7GnlaY0fenFHcCUy3uUfC2bmLMMriAUB9dzo5O5GeK
+7aG9Wck=
+-----END ENCRYPTED PRIVATE KEY-----
+]]
 ';
 
 #log_level 'warn';
@@ -789,6 +826,145 @@ true
 --- request
 GET /t
 --- response_body
+true
+--- no_error_log
+[error]
+
+
+
+=== TEST 16: support PKCS#8 format private key(encrypt)
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local pub, err = resty_rsa:new({
+                public_key = RSA_PUBLIC_KEY,
+            })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local encrypted, err = pub:encrypt("hello")
+            if not encrypted then
+                ngx.say("failed to encrypt: ", err)
+                return
+            end
+
+            local priv, err = resty_rsa:new({
+                private_key = RSA_PKCS8_PRIV_KEY,
+                key_type = resty_rsa.KEY_TYPE.PKCS8,
+            })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local decrypted = priv:decrypt(encrypted)
+            ngx.say(decrypted == "hello")
+
+            collectgarbage()
+        }
+    }
+--- request
+GET /t
+--- response_body
+true
+--- no_error_log
+[error]
+
+
+
+=== TEST 17: support PKCS#8 format private key(verify)
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local algorithm = "SHA256"
+            local priv, err = resty_rsa:new({
+                private_key = RSA_PKCS8_PRIV_KEY,
+                key_type = resty_rsa.KEY_TYPE.PKCS8,
+                algorithm = algorithm,
+            })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+
+            local str = "hello"
+            local sig, err = priv:sign(str)
+            if not sig then
+                ngx.say("failed to sign:", err)
+                return
+            end
+
+            local pub, err = resty_rsa:new({
+                public_key = RSA_PUBLIC_KEY,
+                algorithm = algorithm,
+            })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local verify, err = pub:verify(str, sig)
+            if not verify then
+                ngx.say("verify err: ", err)
+                return
+            end
+            ngx.say(verify)
+
+            collectgarbage()
+        }
+    }
+--- request
+GET /t
+--- response_body
+true
+--- no_error_log
+[error]
+
+
+
+=== TEST 18: RSA pass phrase (PKCS8)
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local pub, err = resty_rsa:new({ public_key = RSA_PASS_PUBLIC_KEY })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local encrypted, err = pub:encrypt("hello")
+            if not encrypted then
+                ngx.say("failed to encrypt: ", err)
+                return
+            end
+            ngx.say("encrypted length: ", #encrypted)
+
+            local priv, err = resty_rsa:new({
+                private_key = RSA_PKCS8_PASS_PRIV_KEY,
+                key_type = resty_rsa.KEY_TYPE.PKCS8,
+                password = "foobar",
+            })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local decrypted = priv:decrypt(encrypted)
+            ngx.say(decrypted == "hello")
+
+            collectgarbage()
+        }
+    }
+--- request
+GET /t
+--- response_body
+encrypted length: 128
 true
 --- no_error_log
 [error]

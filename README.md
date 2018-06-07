@@ -172,7 +172,7 @@ Specifies the type of given key.
 | `key_type` value | meaning |
 | ------------------- | ------ |
 | rsa.KEY_TYPE.PKCS1 | The input key is in PKCS#1 format(usually starts with `-----BEGIN RSA PUBLIC`), which is the default. |
-| rsa.KEY_TYPE.PKCS8 | The input key is in PKCS#8 format(usually starts with `-----BEGIN PUBLIC`). PKCS#8 format of private key has not been supported yet. |
+| rsa.KEY_TYPE.PKCS8 | The input key is in PKCS#8 format(usually starts with `-----BEGIN PUBLIC`). |
 
 ```lua
 -- creates a rsa object with pkcs#8 format of public key
@@ -180,6 +180,14 @@ local resty_rsa = require "resty.rsa"
 local pub, err = resty_rsa:new({
     public_key = RSA_PKCS8_PUB_KEY,
     key_type = resty_rsa.KEY_TYPE.PKCS8,
+})
+
+-- creates a rsa object with pkcs#8 format of private key
+local priv, err = resty_rsa:new({
+    private_key = RSA_PKCS8_PASS_PRIV_KEY,
+    key_type = resty_rsa.KEY_TYPE.PKCS8,
+    -- you need to specify the password if the pkey is encrypted
+    -- password = "foobar",
 })
 ```
 
