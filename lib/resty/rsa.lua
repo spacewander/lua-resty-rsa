@@ -1,16 +1,19 @@
 -- Copyright (C) by Zhu Dejiang (doujiang24)
 
 
+local bit = require "bit"
+local band = bit.band
 local ffi = require "ffi"
 local ffi_new = ffi.new
 local ffi_gc = ffi.gc
 local ffi_copy = ffi.copy
 local ffi_str = ffi.string
 local C = ffi.C
+local tab_concat = table.concat
 local setmetatable = setmetatable
 
 
-local _M = { _VERSION = '0.04' }
+local _M = { _VERSION = '0.05-dev' }
 
 local mt = { __index = _M }
 
@@ -49,7 +52,8 @@ RSA * PEM_read_bio_RSAPublicKey(BIO *bp, RSA **rsa, pem_password_cb *cb,
 RSA * PEM_read_bio_RSA_PUBKEY(BIO *bp, RSA **rsa, pem_password_cb *cb,
                                 void *u);
 
-unsigned long ERR_get_error(void);
+unsigned long ERR_get_error_line_data(const char **file, int *line,
+                                      const char **data, int *flags);
 const char * ERR_reason_error_string(unsigned long e);
 
 typedef struct bignum_st BIGNUM;
@@ -120,6 +124,8 @@ int EVP_SignFinal(EVP_MD_CTX *ctx,unsigned char *sig,unsigned int *s,
 int EVP_VerifyFinal(EVP_MD_CTX *ctx,unsigned char *sigbuf, unsigned int siglen,
                     EVP_PKEY *pkey);
 int EVP_PKEY_set1_RSA(EVP_PKEY *e, RSA *r);
+
+void ERR_set_error_data(char *data, int flags);
 ]]
 --[[
 # define EVP_PKEY_CTX_set_rsa_padding(ctx, pad) \
@@ -134,6 +140,7 @@ local EVP_PKEY_ALG_CTRL = 0x1000
 local EVP_PKEY_CTRL_RSA_PADDING = EVP_PKEY_ALG_CTRL + 1
 local NID_rsaEncryption = 6
 local EVP_PKEY_RSA = NID_rsaEncryption
+local ERR_TXT_STRING = 0x02
 
 local evp_md_ctx_new
 local evp_md_ctx_free
@@ -146,11 +153,28 @@ else
 end
 
 local function ssl_err()
-    local code = C.ERR_get_error()
+    local err_queue = {}
+    local i = 1
+    local data = ffi_new("const char*[1]")
+    local flags = ffi_new("int[1]")
 
-    local err = C.ERR_reason_error_string(code)
+    while true do
+        local code = C.ERR_get_error_line_data(nil, nil, data, flags)
+        if code == 0 then
+            break
+        end
 
-    return nil, ffi_str(err)
+        local err = C.ERR_reason_error_string(code)
+        err_queue[i] = ffi_str(err)
+        i = i + 1
+
+        if data[0] ~= nil and band(flags[0], ERR_TXT_STRING) > 0 then
+            err_queue[i] = ffi_str(data[0])
+            i = i + 1
+        end
+    end
+
+    return nil, tab_concat(err_queue, ": ", 1, i - 1)
 end
 
 local function read_bio(bio)

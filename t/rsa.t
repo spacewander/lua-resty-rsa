@@ -968,3 +968,31 @@ encrypted length: 128
 true
 --- no_error_log
 [error]
+
+
+
+=== TEST 19: process the whole error queue when handling OpenSSL error
+We have to skip this test in Valgrind mode because when running as Valgrind's
+child process, OpenSSL will prompt the password, blocking the test until being killed.
+--- skip_eval: 3: defined $ENV{TEST_NGINX_USE_VALGRIND}
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local priv, err = resty_rsa:new({
+                private_key = RSA_PASS_PRIV_KEY,
+            })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+        }
+    }
+--- request
+GET /t
+--- response_body_like
+new rsa err: (processing error: while reading strings: )?problems getting password: bad password read
+--- no_error_log
+[error]
