@@ -14,7 +14,7 @@ local tab_concat = table.concat
 local setmetatable = setmetatable
 
 
-local _M = { _VERSION = '0.05-dev' }
+local _M = { _VERSION = '0.05' }
 
 local mt = { __index = _M }
 
