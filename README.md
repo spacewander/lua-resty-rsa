@@ -8,14 +8,14 @@ Status
 
 This library is considered production ready.
 
-Build status: [![Travis](https://travis-ci.org/doujiang24/lua-resty-rsa.svg?branch=master)](https://travis-ci.org/doujiang24/lua-resty-rsa)
+Build status: [![Travis](https://travis-ci.org/spacewander/lua-resty-rsa.svg?branch=master)](https://travis-ci.org/spacewander/lua-resty-rsa)
 
 
 Description
 ===========
 
 This library requires an nginx build with OpenSSL,
-the [ngx_lua module](http://wiki.nginx.org/HttpLuaModule), and [LuaJIT 2.0](http://luajit.org/luajit.html).
+the [ngx_lua module](https://github.com/openresty/lua-nginx-module), and [LuaJIT](http://luajit.org/luajit.html).
 
 
 Synopsis
@@ -137,7 +137,7 @@ Methods
 
 To load this library,
 
-1. you need to specify this library's path in ngx_lua's [lua_package_path](https://github.com/chaoslawful/lua-nginx-module#lua_package_path) directive. For example, `lua_package_path "/path/to/lua-resty-rsa/lib/?.lua;;";`.
+1. you need to specify this library's path in ngx_lua's [lua_package_path](https://github.com/openresty/lua-nginx-module#lua_package_path) directive. For example, `lua_package_path "/path/to/lua-resty-rsa/lib/?.lua;;";`.
 2. you use `require` to load the library into a local Lua variable:
 
 ```lua
@@ -227,10 +227,6 @@ verify
 
 Performance
 ========
-
-First of all, you are always recommended to cache the rsa object.
-
-<http://wiki.nginx.org/HttpLuaModule#Data_Sharing_within_an_Nginx_Worker>
 
 I got the result:
 ```
@@ -345,6 +341,7 @@ Copyright and License
 This module is licensed under the MIT license.
 
 Copyright (C) 2014-2014, by Dejiang Zhu (doujiang24) <doujiang24@gmail.com>
+Copyright (C) 2018-, by Zexuan Luo (spacewander)
 
 All rights reserved.
 
