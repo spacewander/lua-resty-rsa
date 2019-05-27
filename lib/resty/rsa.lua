@@ -13,8 +13,7 @@ local C = ffi.C
 local tab_concat = table.concat
 local setmetatable = setmetatable
 
--- remember to remove the '-dev' suffix when releasing a new version to opm
-local _M = { _VERSION = '0.06-dev' }
+local _M = { _VERSION = '1.0.0' }
 
 local mt = { __index = _M }
 
