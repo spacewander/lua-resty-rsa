@@ -190,8 +190,15 @@ end
 -- Follow the calling style to avoid careless mistake.
 function _M.generate_rsa_keys(_, bits, pkcs8)
     local rsa = C.RSA_new()
+    if rsa == nil then
+        return nil, ssl_err()
+    end
     ffi_gc(rsa, C.RSA_free)
+
     local bn = C.BN_new()
+    if bn == nil then
+        return nil, ssl_err()
+    end
     ffi_gc(bn, C.BN_free)
 
     -- Set public exponent to 65537
@@ -205,7 +212,11 @@ function _M.generate_rsa_keys(_, bits, pkcs8)
     end
 
     local pub_key_bio = C.BIO_new(C.BIO_s_mem())
+    if pub_key_bio == nil then
+        return nil, ssl_err()
+    end
     ffi_gc(pub_key_bio, C.BIO_vfree)
+
     if pkcs8 == true then
         if C.PEM_write_bio_RSA_PUBKEY(pub_key_bio, rsa) ~= 1 then
             return nil, ssl_err()
@@ -222,10 +233,18 @@ function _M.generate_rsa_keys(_, bits, pkcs8)
     end
 
     local priv_key_bio = C.BIO_new(C.BIO_s_mem())
+    if priv_key_bio == nil then
+        return nil, ssl_err()
+    end
     ffi_gc(priv_key_bio, C.BIO_vfree)
+
     if pkcs8 == true then
         local pk = C.EVP_PKEY_new()
+        if pk == nil then
+            return nil, ssl_err()
+        end
         ffi_gc(pk, C.EVP_PKEY_free)
+
         if C.EVP_PKEY_set1_RSA(pk,rsa) ~= 1 then
             return nil, ssl_err()
         end
@@ -271,6 +290,9 @@ function _M.new(_, opts)
 
     local bio_method = C.BIO_s_mem()
     local bio = C.BIO_new(bio_method)
+    if bio == nil then
+        return ssl_err()
+    end
     ffi_gc(bio, C.BIO_vfree)
 
     local len = C.BIO_puts(bio, key)
@@ -293,7 +315,11 @@ function _M.new(_, opts)
 
     -- EVP_PKEY
     local pkey = C.EVP_PKEY_new()
+    if pkey == nil then
+        return ssl_err()
+    end
     ffi_gc(pkey, C.EVP_PKEY_free)
+
     if C.EVP_PKEY_set1_RSA(pkey, rsa) == 0 then
         return ssl_err()
     end
@@ -388,6 +414,9 @@ function _M.sign(self, str)
     end
 
     local md_ctx = evp_md_ctx_new()
+    if md_ctx == nil then
+        return ssl_err()
+    end
     ffi_gc(md_ctx, evp_md_ctx_free)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
@@ -414,6 +443,9 @@ function _M.verify(self, str, sig)
     end
 
     local md_ctx = evp_md_ctx_new()
+    if md_ctx == nil then
+        return ssl_err()
+    end
     ffi_gc(md_ctx, evp_md_ctx_free)
 
     if C.EVP_DigestInit(md_ctx, self.md) <= 0 then
