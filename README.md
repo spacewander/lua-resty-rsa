@@ -348,7 +348,7 @@ Copyright and License
 
 This module is licensed under the MIT license.
 
-Copyright (C) 2014-2014, by Dejiang Zhu (doujiang24) <doujiang24@gmail.com>
+Copyright (C) 2014-2018, by Dejiang Zhu (doujiang24) <doujiang24@gmail.com>
 Copyright (C) 2018-, by Zexuan Luo (spacewander)
 
 All rights reserved.
