@@ -334,6 +334,14 @@ Dejiang Zhu (doujiang24) <doujiang24@gmail.com>
 
 Zexuan Luo (spacewander)
 
+Release Steps
+=============
+
+1. update the `_VERSION` in `lib/resty/rsa.lua`
+2. update the `version` in `dist.ini`
+3. rename current rockspec to the new version and update the reference in it.
+4. tag the new version
+5. opm upload
 
 Copyright and License
 =====================
