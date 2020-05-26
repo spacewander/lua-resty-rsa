@@ -174,6 +174,9 @@ local function ssl_err()
         end
     end
 
+    if #err_queue == 0 then
+        return nil, "internal error"
+    end
     return nil, tab_concat(err_queue, ": ", 1, i - 1)
 end
 
