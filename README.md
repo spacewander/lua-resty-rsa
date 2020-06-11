@@ -168,10 +168,11 @@ Specifies the private rsa key.
 Specifies the password to read rsa key.
 * `key_type`
 Specifies the type of given key.
+By default the type will be detected from the value of the key.
 
 | `key_type` value | meaning |
 | ------------------- | ------ |
-| rsa.KEY_TYPE.PKCS1 | The input key is in PKCS#1 format(usually starts with `-----BEGIN RSA PUBLIC`), which is the default. |
+| rsa.KEY_TYPE.PKCS1 | The input key is in PKCS#1 format(usually starts with `-----BEGIN RSA PUBLIC`). |
 | rsa.KEY_TYPE.PKCS8 | The input key is in PKCS#8 format(usually starts with `-----BEGIN PUBLIC`). |
 
 ```lua

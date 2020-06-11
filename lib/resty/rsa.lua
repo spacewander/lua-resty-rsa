@@ -30,10 +30,13 @@ local KEY_TYPE = {
     PKCS1 = "PKCS#1",
     PKCS8 = "PKCS#8",
 }
+local PKCS1_PREFIX = "-----BEGIN RSA "
 _M.KEY_TYPE = KEY_TYPE
 
 
 ffi.cdef[[
+int memcmp(const void *s1, const void *s2, size_t n);
+
 typedef struct bio_st BIO;
 typedef struct bio_method_st BIO_METHOD;
 BIO_METHOD *BIO_s_mem(void);
@@ -180,6 +183,17 @@ local function ssl_err()
     return nil, tab_concat(err_queue, ": ", 1, i - 1)
 end
 
+local function has_prefix(s, prefix)
+    if type(s) ~= "string" or type(prefix) ~= "string" then
+        return false
+    end
+    if #s < #prefix then
+        return false
+    end
+    local rc = C.memcmp(s, prefix, #prefix)
+    return rc == 0
+end
+
 local function read_bio(bio)
     local BIO_CTRL_PENDING = 10
     local keylen = C.BIO_ctrl(bio, BIO_CTRL_PENDING, 0, nil);
@@ -278,8 +292,15 @@ function _M.new(_, opts)
         key = opts.public_key
         if opts.key_type == KEY_TYPE.PKCS8 then
             read_func = C.PEM_read_bio_RSA_PUBKEY
-        else
+        elseif opts.key_type == KEY_TYPE.PKCS1 then
             read_func = C.PEM_read_bio_RSAPublicKey
+        else
+            local is_pkcs1 = has_prefix(key, PKCS1_PREFIX)
+            if is_pkcs1 then
+                read_func = C.PEM_read_bio_RSAPublicKey
+            else
+                read_func = C.PEM_read_bio_RSA_PUBKEY
+            end
         end
         is_pub = true
 

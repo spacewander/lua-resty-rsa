@@ -996,3 +996,69 @@ GET /t
 new rsa err: (processing error: while reading strings: )?problems getting password: bad password read
 --- no_error_log
 [error]
+
+
+
+=== TEST 20: auto detect PKCS#8 format public key if no key type given
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local pub, err = resty_rsa:new({
+                public_key = RSA_PKCS8_PUB_KEY,
+            })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local encrypted, err = pub:encrypt("hello")
+            if not encrypted then
+                ngx.say("failed to encrypt: ", err)
+                return
+            end
+
+            local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY })
+            if not priv then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+            local decrypted = priv:decrypt(encrypted)
+            ngx.say(decrypted == "hello")
+
+            collectgarbage()
+        }
+    }
+--- request
+GET /t
+--- response_body
+true
+--- no_error_log
+[error]
+
+
+
+=== TEST 21: specify PKCS#1 key type but the format is PKCS#8
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            $TEST_NGINX_PK_CONF
+            local resty_rsa = require "resty.rsa"
+            local pub, err = resty_rsa:new({
+                public_key = RSA_PKCS8_PUB_KEY,
+                key_type = resty_rsa.KEY_TYPE.PKCS1,
+            })
+            if not pub then
+                ngx.say("new rsa err: ", err)
+                return
+            end
+        }
+    }
+--- request
+GET /t
+--- response_body
+new rsa err: no start line: Expecting: RSA PUBLIC KEY
+--- no_error_log
+[error]
