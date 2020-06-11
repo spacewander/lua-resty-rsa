@@ -1,8 +1,8 @@
 package = 'lua-resty-rsa'
-version = '1.0.1-1'
+version = '1.0.2-1'
 source = {
   url = 'git://github.com/spacewander/lua-resty-rsa.git',
-  tag = 'v1.0.1'
+  tag = 'v1.0.2'
 }
 description = {
   summary = 'RSA encrypt/decrypt & sign/verify for OpenResty/LuaJIT.',

@@ -13,7 +13,7 @@ local C = ffi.C
 local tab_concat = table.concat
 local setmetatable = setmetatable
 
-local _M = { _VERSION = '1.0.1' }
+local _M = { _VERSION = '1.0.2' }
 
 local mt = { __index = _M }
 
