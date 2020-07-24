@@ -168,12 +168,18 @@ local function ssl_err()
         end
 
         local err = C.ERR_reason_error_string(code)
-        err_queue[i] = ffi_str(err)
-        i = i + 1
-
-        if data[0] ~= nil and band(flags[0], ERR_TXT_STRING) > 0 then
-            err_queue[i] = ffi_str(data[0])
+        if err == nil then
+            err_queue[i] = "unknown openssl error code: " .. code
             i = i + 1
+
+        else
+            err_queue[i] = ffi_str(err)
+            i = i + 1
+
+            if data[0] ~= nil and band(flags[0], ERR_TXT_STRING) > 0 then
+                err_queue[i] = ffi_str(data[0])
+                i = i + 1
+            end
         end
     end
 
