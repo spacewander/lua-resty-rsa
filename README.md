@@ -8,7 +8,7 @@ Status
 
 This library is considered production ready.
 
-Build status: [![Travis](https://travis-ci.org/spacewander/lua-resty-rsa.svg?branch=master)](https://travis-ci.org/spacewander/lua-resty-rsa)
+Build status: ![pass](https://github.com/spacewander/lua-resty-rsa/workflows/ci/badge.svg?branch=master)
 
 
 Description
