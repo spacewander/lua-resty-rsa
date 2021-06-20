@@ -29,6 +29,7 @@ _M.PADDING = PADDING
 local KEY_TYPE = {
     PKCS1 = "PKCS#1",
     PKCS8 = "PKCS#8",
+    PKIX = "PKIX",
 }
 local PKCS1_PREFIX = "-----BEGIN RSA "
 _M.KEY_TYPE = KEY_TYPE
@@ -296,7 +297,9 @@ function _M.new(_, opts)
 
     if opts.public_key then
         key = opts.public_key
-        if opts.key_type == KEY_TYPE.PKCS8 then
+        if opts.key_type == KEY_TYPE.PKIX or
+          opts.key_type == KEY_TYPE.PKCS8 -- for compatible
+        then
             read_func = C.PEM_read_bio_RSA_PUBKEY
         elseif opts.key_type == KEY_TYPE.PKCS1 then
             read_func = C.PEM_read_bio_RSAPublicKey
