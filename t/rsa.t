@@ -99,7 +99,7 @@ RCxMyDrtIHNmD2uVFQefpY+6OiTaOsWYiK9FtPQwswue1NjPtXrClKt+gzJkCAd6
 -----END RSA PRIVATE KEY-----
 ]]
 
-local RSA_PKCS8_PUB_KEY = [[
+local RSA_PKIX_PUB_KEY = [[
 -----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCfWKhQk5YZ5k2DQnszH8u8m+8c
 AM0Yp17qdWZedede64SavFtMFcDbfpnCsEc4rANUiKjxpYYsg29kSSnNXAja1TX4
@@ -742,7 +742,7 @@ generated rsa keys err: .+$
 
 
 
-=== TEST 14: support PKCS#8 format public key(encrypt)
+=== TEST 14: support PKIX format public key(encrypt)
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -750,7 +750,7 @@ generated rsa keys err: .+$
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local pub, err = resty_rsa:new({
-                public_key = RSA_PKCS8_PUB_KEY,
+                public_key = RSA_PKIX_PUB_KEY,
                 key_type = resty_rsa.KEY_TYPE.PKCS8,
             })
             if not pub then
@@ -783,7 +783,7 @@ true
 
 
 
-=== TEST 15: support PKCS#8 format public key(verify)
+=== TEST 15: support PKIX format public key(verify)
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -805,8 +805,8 @@ true
             end
 
             local pub, err = resty_rsa:new({
-                public_key = RSA_PKCS8_PUB_KEY,
-                key_type = resty_rsa.KEY_TYPE.PKCS8,
+                public_key = RSA_PKIX_PUB_KEY,
+                key_type = resty_rsa.KEY_TYPE.PKIX,
                 algorithm = algorithm,
             })
             if not pub then
@@ -999,7 +999,7 @@ new rsa err: (processing error: while reading strings: )?problems getting passwo
 
 
 
-=== TEST 20: auto detect PKCS#8 format public key if no key type given
+=== TEST 20: auto detect PKIX format public key if no key type given
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -1007,7 +1007,7 @@ new rsa err: (processing error: while reading strings: )?problems getting passwo
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local pub, err = resty_rsa:new({
-                public_key = RSA_PKCS8_PUB_KEY,
+                public_key = RSA_PKIX_PUB_KEY,
             })
             if not pub then
                 ngx.say("new rsa err: ", err)
@@ -1039,7 +1039,7 @@ true
 
 
 
-=== TEST 21: specify PKCS#1 key type but the format is PKCS#8
+=== TEST 21: specify PKCS#1 key type but the format is PKIX
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -1047,7 +1047,7 @@ true
             $TEST_NGINX_PK_CONF
             local resty_rsa = require "resty.rsa"
             local pub, err = resty_rsa:new({
-                public_key = RSA_PKCS8_PUB_KEY,
+                public_key = RSA_PKIX_PUB_KEY,
                 key_type = resty_rsa.KEY_TYPE.PKCS1,
             })
             if not pub then
