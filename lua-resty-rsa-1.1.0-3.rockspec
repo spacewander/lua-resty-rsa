@@ -1,5 +1,5 @@
 package = 'lua-resty-rsa'
-version = '1.1.0-2'
+version = '1.1.0-3'
 source = {
   url = 'git+https://github.com/spacewander/lua-resty-rsa.git',
   tag = 'v1.1.0'
