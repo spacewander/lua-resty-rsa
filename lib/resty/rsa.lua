@@ -92,6 +92,7 @@ int EVP_PKEY_CTX_ctrl(EVP_PKEY_CTX *ctx, int keytype, int optype,
                       int cmd, int p1, void *p2);
 
 int EVP_PKEY_size(EVP_PKEY *pkey);
+int EVP_PKEY_get_size(EVP_PKEY *pkey);
 
 int EVP_PKEY_encrypt_init(EVP_PKEY_CTX *ctx);
 int EVP_PKEY_encrypt(EVP_PKEY_CTX *ctx,
@@ -388,7 +389,13 @@ function _M.new(_, opts)
         end
     end
 
-    local size = C.EVP_PKEY_size(pkey)
+    --local size = C.EVP_PKEY_size(pkey)
+    local size
+    if not pcall(function () return C.EVP_PKEY_size(pkey) end) then
+        size = C.EVP_PKEY_get_size(pkey)
+    else
+        size=C.EVP_PKEY_size(pkey)
+    end
     return setmetatable({
             pkey = pkey,
             size = size,
