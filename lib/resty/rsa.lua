@@ -92,6 +92,7 @@ int EVP_PKEY_CTX_ctrl(EVP_PKEY_CTX *ctx, int keytype, int optype,
                       int cmd, int p1, void *p2);
 
 int EVP_PKEY_size(EVP_PKEY *pkey);
+int EVP_PKEY_get_size(EVP_PKEY *pkey);
 
 int EVP_PKEY_encrypt_init(EVP_PKEY_CTX *ctx);
 int EVP_PKEY_encrypt(EVP_PKEY_CTX *ctx,
@@ -154,6 +155,13 @@ if not pcall(function () return C.EVP_MD_CTX_create end) then
 else
     evp_md_ctx_new = C.EVP_MD_CTX_create
     evp_md_ctx_free = C.EVP_MD_CTX_destroy
+end
+
+local evp_pkey_size
+if not pcall(function () return C.EVP_PKEY_size end) then
+    evp_pkey_size = C.EVP_PKEY_get_size
+else
+    evp_pkey_size = C.EVP_PKEY_size
 end
 
 local function ssl_err()
@@ -388,7 +396,7 @@ function _M.new(_, opts)
         end
     end
 
-    local size = C.EVP_PKEY_size(pkey)
+   local size = evp_pkey_size(pkey)
     return setmetatable({
             pkey = pkey,
             size = size,
