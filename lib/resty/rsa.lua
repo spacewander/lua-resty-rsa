@@ -157,6 +157,13 @@ else
     evp_md_ctx_free = C.EVP_MD_CTX_destroy
 end
 
+local evp_pkey_size
+if not pcall(function () return C.EVP_PKEY_size end) then
+    evp_pkey_size = C.EVP_PKEY_get_size
+else
+    evp_pkey_size = C.EVP_PKEY_size
+end
+
 local function ssl_err()
     local err_queue = {}
     local i = 1
@@ -389,13 +396,8 @@ function _M.new(_, opts)
         end
     end
 
-    --local size = C.EVP_PKEY_size(pkey)
-    local size
-    if not pcall(function () return C.EVP_PKEY_size(pkey) end) then
-        size = C.EVP_PKEY_get_size(pkey)
-    else
-        size=C.EVP_PKEY_size(pkey)
-    end
+   local size=evp_pkey_size(pkey)
+
     return setmetatable({
             pkey = pkey,
             size = size,
