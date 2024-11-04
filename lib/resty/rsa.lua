@@ -396,8 +396,7 @@ function _M.new(_, opts)
         end
     end
 
-   local size=evp_pkey_size(pkey)
-
+   local size = evp_pkey_size(pkey)
     return setmetatable({
             pkey = pkey,
             size = size,
