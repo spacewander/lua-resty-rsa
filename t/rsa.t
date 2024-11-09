@@ -127,21 +127,22 @@ P6uZ7BbnsmjumA==
 ]]
 local RSA_PKCS8_PASS_PRIV_KEY= [[
 -----BEGIN ENCRYPTED PRIVATE KEY-----
-MIICoTAbBgkqhkiG9w0BBQMwDgQIyXIs862v86wCAggABIICgH+2henffS6sFSpE
-H2RE6zA5ml8i+aUtSu2Gl3b55uSdOSCZVTjwhos7hz5HdjHQ6wrdvdKQ2G49cS0D
-EQCcWlL0acADFouyULe4wNx0K2G5Xo8wfxgT0J29oZO5OWCWLcbMt2INRYG4cBKq
-HqdWDtV9IKWOxfu3s/F31us6Iph3XttFuCS73ndrducwx92TIBQpGqqmS2Wxgxd0
-58Uxp7VFdc/Y//3t6NhhO0bOGM8SYP/zR3PgY/hvWQbVaZs/bHHv16dVPUtnuPMS
-3K3tp4lxJ8FXieEok5FmPTC5estdZgOLx0KLItD6SgLNBIWExQb0uHzZd+X0XtQB
-yAGjbjdA4/yGL45Yits6cvN7Jl/WjhgZIXbROtZF2aYxHxfqW+GsBz771TROs/A+
-VT7MsyrBhT6eqmUmKssVfj7cYIiFBcDxMCj9B3yQQd5ulc/ymIElKWDkpc7wxQdp
-rlyeU9DY6IF52ej4hiL8r6vyhzo7TPXzn1aSUVAc0+16liyE4nuEZEeSf0scOI0b
-w25cIkrpraDVpRJMHR1g2uLkaA5rRNikBdgMjQBYNOahdrIIqe0J+mdw5nwcXya+
-MB+O//DfCBKApmk2xe6Is4hXeXhaXSLDcajbS0qvtfhcKFGQX8zGBhyH8ulsFDR7
-LDdgtUs/pGkfKmwtJuwsQW3rgxMqtPZ0MgQacRUf1BXLWUjJH6PNxRBz4pJCeOH/
-81fzPUxIwQVVKrFg4zXzzfYzH6nRjBtCZ/IjrX0FEecJrzuQRwa5pRWzqv0qCsEP
-LDCnJRRW0oidlb0yvCk4Wj7GnlaY0fenFHcCUy3uUfC2bmLMMriAUB9dzo5O5GeK
-7aG9Wck=
+MIIC3TBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIhb4GOb0D4mgCAggA
+MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBDjIYlxykFE4aSt/4onYKxQBIIC
+gB25/DcrsWZpqFs3r54aC9OnT6dy32CgLs0lNzB+SHoHT1KTbDAX2mBEVTPrDl1+
+l4IGsqtcS/wsCi7fzPZ18QrIrRR2FJueEwaS8Jbg5OT/3JGfCGXCaId0p2NljrwS
+HPGOIdkHx38uOubzPoYOfeQw0rYNy6IfEqHXA9CCNT6TP43CXWrxidDCC7N5WUE5
+d/HSuqN+cGt0TS2N3siqoURkAx0iALOX9pwsOLUfuwvmzkeU5nyaihLW+dseR/oL
+puGLjMwA/NV2pVo8ViRQslOUY4ImNQxtYlHdZqhm7AqU89qrIrUD/jc6TK7LqKxA
+UgAGZFcvrI7p2j3lpmkRs7oI0JZiEZ2vqZ1C3DuzfW8h6lsXULHrnHE5n3Y6dKsw
+mEnlYpf63KbPVlMePkuKLxyN3NuxsKUhpcZtea9OmdaDHqiU4LkaD05AJak3p/2j
+VebOUqZYaukh+ucEcItaraybXS9wIZI4re6W7Ak1dUuA3zO1T1kDN9dMOUiEqfy4
+o6NfC2Fn7EeyTSJVnEn5xmhUdbxPhpeJOb4ZAQJLrjaoYY1RDGhMux84otrtP/DD
+HFlOw0iWBjWkBAp/eDua+9M/+FS9c6xZ+NO1E6j3tsvFV3GfLHdBic6zp1tR2Zn/
+OiC4gSzU7j3BENNpuuxTob5tEijhTjtDuTr7XpLYvQtSItlg05+Iq2VKtiN/oMYU
+DBOFWJuD79AG0ZwzLChAPNZG0pHgAH2qrdfwhygehNdncW9xZzQT8oFQlQTNHJcv
+vA4Mo08QiuVDyBQ7h8YuzUhQcbAMF7Y3CJ5u3ctiNkUuLLlN7Gy1sAvQ8K3D7Ju3
+xd+7BVH7S212qiNd3OdxE8Q=
 -----END ENCRYPTED PRIVATE KEY-----
 ]]
 ';
@@ -303,7 +304,6 @@ GET /t
 RSA_NO_PADDING:0
 RSA_PKCS1_OAEP_PADDING:86
 RSA_PKCS1_PADDING:117
-RSA_SSLV23_PADDING:117
 --- no_error_log
 [error]
 
@@ -477,7 +477,7 @@ true
 GET /t
 --- response_body_like
 sig length: 128
-verify err: (bad signature|algorithm mismatch)
+verify err: (bad signature|algorithm mismatch|bad signature: RSA lib)
 --- no_error_log
 [error]
 
@@ -492,7 +492,6 @@ verify err: (bad signature|algorithm mismatch)
             local resty_rsa = require "resty.rsa"
 
             local algorithms = {
-                "MD4",
                 "MD5",
                 "RIPEMD160",
                 "SHA1",
@@ -500,7 +499,6 @@ verify err: (bad signature|algorithm mismatch)
                 "SHA256",
                 "SHA384",
                 "SHA512",
-                "md4",
                 "md5",
                 "ripemd160",
                 "sha1",
@@ -508,7 +506,6 @@ verify err: (bad signature|algorithm mismatch)
                 "sha256",
                 "sha384",
                 "sha512",
-                "RSA-MD4",
                 "RSA-MD5",
                 "RSA-RIPEMD160",
                 "RSA-SHA1",
@@ -517,7 +514,6 @@ verify err: (bad signature|algorithm mismatch)
                 "RSA-SHA256",
                 "RSA-SHA384",
                 "RSA-SHA512",
-                "md4WithRSAEncryption",
                 "md5WithRSAEncryption",
                 "ripemd",
                 "ripemd160WithRSA",
@@ -532,33 +528,37 @@ verify err: (bad signature|algorithm mismatch)
             }
             local count = 0
             for i, algorithm in pairs(algorithms) do
+                local str = "hello"
+                local sig, pub, verify
                 local priv, err = resty_rsa:new({ private_key = RSA_PRIV_KEY, algorithm = algorithm })
                 if not priv then
                     ngx.say("new rsa err: ", err, "; with algorithm: ", algorithm)
-                    return
+                    goto continue
                 end
 
-                local str = "hello"
-                local sig, err = priv:sign(str)
+                sig, err = priv:sign(str)
                 if not sig then
                     ngx.say("failed to sign:", err, "; with algorithm: ", algorithm)
-                    return
+                    goto continue
                 end
 
-                local pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY, algorithm = algorithm })
+                pub, err = resty_rsa:new({ public_key = RSA_PUBLIC_KEY, algorithm = algorithm })
                 if not pub then
                     ngx.say("new rsa err: ", err)
-                    return
+                    goto continue
                 end
-                local verify, err = pub:verify(str, sig)
+
+                verify, err = pub:verify(str, sig)
                 if not verify then
                     ngx.say("verify err: ", err)
-                    return
+                    goto continue
                 end
 
-                collectgarbage()
-
                 count = count + 1
+
+                ::continue::
+
+                collectgarbage()
             end
 
             ngx.say(count == #algorithms)
@@ -993,7 +993,7 @@ child process, OpenSSL will prompt the password, blocking the test until being k
 --- request
 GET /t
 --- response_body_like
-new rsa err: (processing error: while reading strings: )?problems getting password: bad password read
+new rsa err: (processing error: while reading strings: )?problems getting password: (interrupted or cancelled: interrupted or cancelled: )?bad password read
 --- no_error_log
 [error]
 

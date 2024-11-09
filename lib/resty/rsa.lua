@@ -19,10 +19,9 @@ local mt = { __index = _M }
 
 
 local PADDING = {
-    RSA_PKCS1_PADDING = 1,  -- RSA_size - 11
-    RSA_SSLV23_PADDING = 2, -- RSA_size - 11
-    RSA_NO_PADDING = 3,     -- RSA_size
-    RSA_PKCS1_OAEP_PADDING = 4, -- RSA_size - 42
+    RSA_PKCS1_PADDING = 1,
+    RSA_NO_PADDING = 3,
+    RSA_PKCS1_OAEP_PADDING = 4,
 }
 _M.PADDING = PADDING
 
