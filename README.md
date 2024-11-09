@@ -1,14 +1,14 @@
 Name
 =============
 
-lua-resty-rsa - RSA functions for LuaJIT
+lua-resty-rsa - RSA functions for OpenResty
 
 Status
 ======
 
 This library is considered production ready.
 
-Build status: ![pass](https://github.com/spacewander/lua-resty-rsa/workflows/ci/badge.svg?branch=master)
+Build status: ![https://github.com/spacewander/lua-resty-rsa/workflows/build/badge.svg?branch=master](https://github.com/spacewander/lua-resty-rsa/actions/workflows/ci.yml/badge.svg?branch=master)
 
 
 Description
